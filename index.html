@@ -790,7 +790,7 @@ function renderCardInner(listNum, focusName) {
     <div class="section-label">📞 Contact</div>
     ${contactRows}
 
-    <div class="section-label hotel-toggle" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel <span class="chevron" style="float:right;">▸</span></div>
+    <div class="section-label hotel-toggle" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel Details &gt;&gt; <span class="chevron" style="float:right;">▸</span></div>
     <div class="hotel-collapsible collapsed">
       <div class="send-row">
         ${(() => {
