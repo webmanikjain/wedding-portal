@@ -4,11 +4,11 @@ const seed = require('../../tracker_seed.json');
 exports.handler = async () => {
   try {
     const store = getStore('wedding-tracker');
-    let data = await store.get('state', { type: 'json' });
+    let data = await store.get('state-v2', { type: 'json' });
     if (!data) {
       // First run - seed from the uploaded Google Tracker export
       data = seed;
-      await store.setJSON('state', data);
+      await store.setJSON('state-v2', data);
     }
     return {
       statusCode: 200,

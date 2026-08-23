@@ -12,7 +12,7 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
     const store = getStore('wedding-tracker');
-    let data = await store.get('state', { type: 'json' });
+    let data = await store.get('state-v2', { type: 'json' });
     if (!data) data = seed;
 
     if (body.type === 'message') {
@@ -26,7 +26,7 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'Unknown type' }) };
     }
 
-    await store.setJSON('state', data);
+    await store.setJSON('state-v2', data);
     return {
       statusCode: 200,
       headers: {
