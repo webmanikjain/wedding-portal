@@ -1,6 +1,14 @@
 const { getStore } = require('@netlify/blobs');
 const seed = require('../../tracker_seed.json');
 
+function getTrackerStore() {
+  return getStore({
+    name: 'wedding-tracker',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_ACCESS_TOKEN,
+  });
+}
+
 // Body shape (one of):
 //   { type: 'message', guestName, field, value }        field: hotelConfirmationSent | flightConfirmationSent | preArrivalWelcomeSent | preDepartureReminderSent
 //   { type: 'transportReceived', guestName, value }     value: true|false
@@ -11,7 +19,7 @@ exports.handler = async (event) => {
   }
   try {
     const body = JSON.parse(event.body);
-    const store = getStore('wedding-tracker');
+    const store = getTrackerStore();
     let data = await store.get('state-v2', { type: 'json' });
     if (!data) data = seed;
 

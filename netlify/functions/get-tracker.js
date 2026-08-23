@@ -1,9 +1,17 @@
 const { getStore } = require('@netlify/blobs');
 const seed = require('../../tracker_seed.json');
 
+function getTrackerStore() {
+  return getStore({
+    name: 'wedding-tracker',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_ACCESS_TOKEN,
+  });
+}
+
 exports.handler = async () => {
   try {
-    const store = getStore('wedding-tracker');
+    const store = getTrackerStore();
     let data = await store.get('state-v2', { type: 'json' });
     if (!data) {
       // First run - seed from the uploaded Google Tracker export
