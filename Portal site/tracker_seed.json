@@ -1,0 +1,1290 @@
+{
+  "messages": {
+    "Sanjiv Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Archana Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Nupur Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Kanav Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Arman Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Brijendra Kumar Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Chandrani Kayal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shoma Biswas": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rohit Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ratnam Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Pankaj Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sippy Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Manik Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Purva Chawla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ivaan Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Seema Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rakesh Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Pranav Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Manushi Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Priti Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Manoj Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anshu Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "John Yi": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Lalit Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Nisha Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Priyanka Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Alisha Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ankur Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Purvi Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Eva Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Kai Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Aden Agarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vinita Chawla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Prateek Chawla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Parul Garg": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sachin Garg": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Varun Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Swati Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Kiansha Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shobit Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Kanak Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Piyush Saraf": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Smriti Saraf": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shefali Chawla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vipul Chawla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vivek Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Kanika Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Aarna Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vishvaraj Velho": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shamika Velho": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rashmi Agrawal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anoop Agrawal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Navya Chawla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Mayura Kumar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Priti Rao": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ashwin Rao": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Veena Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Gopal Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Samita Bhatia": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ashish Bhatia": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sukanto Choudhury": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Nomita Choudhury": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Malini Sikka": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sanjay Sikka": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Subhag Singh": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anju Suri": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sushil Suri": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "\u00dcst\u00fcner Akpinar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Gozde Akpinar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ece Akp\u0131nar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Marco Medini": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Mari Medini": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Mia Medini": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Matilde Medini": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Martina Medini": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rahul Bubna": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Puja Bubna": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Mamta Suri": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Savita Aggarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ruchi Goel": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rajeev Goel": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Raghav Goyal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Neeru Goyal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Pradeep Goyal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Nalini Bansal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Natasha Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Priyank Sukhija": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sanjeev Sagar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Seema Sagar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Aanchal Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ankit Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Amey Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ajay Sagar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Manisha Sagar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rachna Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vidur Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ishaan Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sunaina Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Svar Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Kairav Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ishhita Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Krishna Rao": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sanya Sagar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ishhita Baijal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rituraaj Baijal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ishkriti Baijal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Mohit Batra": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vandana Batra": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shivraj Jaiswal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rhea Jaiswal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Piyush Choubey": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shantae Choubey": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anirudh Chirimar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sakshi Chirimar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Umang Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shikha Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Samarth Mehta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sumeet Mehta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Akash Sachdev": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Malika Bhutani": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Aditya Nag": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sneha Chattopadhyay": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Preksha Dugar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Harsh Kotia": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Udisha Patodia": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rayan Patel": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ayush Bajoria": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Naina Bajoria": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Awral Beri": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sanjana Batra": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Lyla Beri": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Viraj Gadhoke": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vasudha Gadhoke": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sambhav Kapur": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Pranati Khanna": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Pranav Sharma": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Prarthana Kumar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vidhit Tulshan": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Priya Tulshan": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Adishree Singh": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sidak Bhattal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Abhinav Grover": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Supriya Grover": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rubin Sabharwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Riddhima Sabharwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Raghav Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shweta Kapur": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Agrim Chakravarty": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Dhruv Mahajan": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anant Raj Pathak": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ofra": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Aanchal Suri": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Abhishek Bhayana": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anupam Jaina": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Pallavi Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Aneesh Goel": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Riya Aggarwal": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Noor Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vineti Dutta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sameer Gujral": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sonia Modi": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Neha Pahwa": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Uttkarsh Pahwa": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Jaiveer Khurana": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Shikha Sharma": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rishabh Jain": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Saumya Swarup": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Labham Sogani": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Silky Sogani": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Cathy Han": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Chase Hu": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Bernie Siu": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Wilson Vu": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Eric Levine": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Adar Arnon": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rachel Choi": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Melissa Villanueva": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Mahrukh Malik": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ayezan Malik": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Zamrez Malik": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Zahraan Malik": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Irene Kwok": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Charlotte Chang": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Masato Nakamura": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Camilo Pabon": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Hema Bhansali": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anish Bhansali": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Archna Sobti": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sunil Sobti": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sahil Desai": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sonal Desai": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rahul Sonthalia": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Sweta Sonthalia": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rohit Kapoor": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Thalia Praxedes": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Bob Bhalla": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Anant Iyer": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vinay Piparsania": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Hansa Piparsania": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ajay Gaggar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Rajshree Gaggar": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Gaurav Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Surbhi Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "No Pick Up",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Soham Sogani": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vishal Mehra": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Leena Mehra": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Saachi Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Devina Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Vivaan Gupta": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Ramandeep Arora": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Radhika Singh": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Safia Livingston": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Piyush Choudhary": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    },
+    "Prarthna Sharma": {
+      "hotelConfirmationSent": "Yes-Sent",
+      "flightConfirmationSent": "Yes-Sent",
+      "preArrivalWelcomeSent": "Ok to send",
+      "preDepartureReminderSent": "Ok to send"
+    }
+  },
+  "transportReceived": {},
+  "roomCheckedIn": {}
+}
