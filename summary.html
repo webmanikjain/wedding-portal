@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tracker Summary</title>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 0; padding: 16px; background: #f7f5f2; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 13px; margin-bottom: 16px; }
+  .controls { margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=text] { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; flex: 1; min-width: 160px; }
+  select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+  button { padding: 8px 14px; border-radius: 6px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
+  th { background: #2c2416; color: white; position: sticky; top: 0; cursor: pointer; }
+  tr:hover { background: #faf8f5; }
+  .yes { background: #d4edda; color: #1a5c2a; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .no { background: #f0f0f0; color: #888; padding: 2px 8px; border-radius: 10px; }
+  .err { background: #f8d7da; color: #842029; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .nopickup { background: #fff3cd; color: #856404; padding: 2px 8px; border-radius: 10px; }
+  .checked { background: #d4edda; }
+  .count { font-size: 12px; color: #555; margin-left: 8px; }
+  .table-wrap { overflow-x: auto; max-height: 80vh; overflow-y: auto; }
+  .statusSelect { font-size: 12px; padding: 3px 6px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
+  .statusSelect.yes { background: #d4edda; color: #1a5c2a; font-weight: 600; }
+  .statusSelect.no { background: #f0f0f0; color: #888; }
+  .statusSelect.err { background: #f8d7da; color: #842029; font-weight: 600; }
+  .statusSelect.nopickup { background: #fff3cd; color: #856404; }
+</style>
+</head>
+<body>
+<h1>Guest Comms Tracker — Summary</h1>
+<div class="sub">Live from the same backend as the portal. Refresh this page anytime for the latest.</div>
+<div class="controls">
+  <input type="text" id="filterInput" placeholder="Search guest name or room...">
+  <select id="filterCol">
+    <option value="">Show all</option>
+    <option value="hotel">Hotel Confirmation</option>
+    <option value="flight">Flight Confirmation</option>
+    <option value="prearrival">Pre-Arrival Welcome</option>
+    <option value="predep">Pre-Departure Reminder</option>
+    <option value="received">Transport Received</option>
+    <option value="checkedin">Room Checked In</option>
+  </select>
+  <select id="filterVal"></select>
+  <button onclick="location.reload()">↻ Refresh</button>
+  <button onclick="downloadExcel()">⬇ Download Excel</button>
+  <span class="count" id="resultCount"></span>
+</div>
+<div class="table-wrap">
+<table id="tbl">
+  <thead>
+    <tr>
+      <th onclick="sortBy('room')">List #</th>
+      <th onclick="sortBy('name')">Guest</th>
+      <th onclick="sortBy('subgroup')">Subgroup</th>
+      <th onclick="sortBy('hotel')">Hotel Conf</th>
+      <th onclick="sortBy('flight')">Flight Conf</th>
+      <th onclick="sortBy('prearrival')">Pre-Arrival</th>
+      <th onclick="sortBy('predep')">Pre-Departure</th>
+      <th onclick="sortBy('received')">Transport Received</th>
+      <th onclick="sortBy('checkedin')">Room Checked In</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const ROOMS = [{"listNum": 1, "room": "701", "subgroup": "Gupta Core", "names": ["Sanjiv Gupta", "Archana Gupta"]}, {"listNum": 2, "room": "714", "subgroup": "Gupta Core", "names": ["Nupur Gupta", "Kanav Arora", "Dia Arora"]}, {"listNum": 3, "room": "713", "subgroup": "Gupta Core", "names": ["Arman Arora"]}, {"listNum": 4, "room": "723", "subgroup": "Gupta Core", "names": ["Brijendra Kumar Gupta"]}, {"listNum": 5, "room": "724", "subgroup": "Gupta Core", "names": ["Chandrani Kayal", "Shoma Biswas"]}, {"listNum": 6, "room": "715", "subgroup": "Gupta Core", "names": ["Seema Arora", "Rakesh Arora"]}, {"listNum": 7, "room": "716", "subgroup": "Gupta Core", "names": ["Pranav Arora", "Manushi Arora", "Yug Arora & Yuvaan Arora"]}, {"listNum": 8, "room": "719", "subgroup": "Gupta Core", "names": ["Priti Agarwal", "Manoj Agarwal"]}, {"listNum": 9, "room": "717", "subgroup": "Gupta Core", "names": ["Ankur Agarwal", "Purvi Agarwal"]}, {"listNum": 38, "room": "718", "subgroup": "Gupta Core", "names": ["Eva Agarwal", "Kai Agarwal", "Aden Agarwal"]}, {"listNum": 10, "room": "720", "subgroup": "Gupta Core", "names": ["Anshu Agarwal", "John Yi"]}, {"listNum": 16, "room": "722", "subgroup": "Gupta Core", "names": ["Lalit Gupta", "Nisha Gupta"]}, {"listNum": 17, "room": "727", "subgroup": "Gupta Core", "names": ["Priyanka Gupta", "Alisha Gupta"]}, {"listNum": 11, "room": "1002", "subgroup": "Bride & Groom", "names": ["Rohit Gupta", "Ratnam Jain"]}, {"listNum": 18, "room": "621", "subgroup": "Gupta Family", "names": ["Parul Garg", "Sachin Garg"]}, {"listNum": 19, "room": "620", "subgroup": "Gupta Family", "names": ["Varun Gupta", "Swati Gupta", "Kiansha Gupta"]}, {"listNum": 21, "room": "619", "subgroup": "Gupta Family", "names": ["Shobit Gupta", "Kanak Gupta"]}, {"listNum": 22, "room": "616", "subgroup": "Gupta Family", "names": ["Shefali Chawla", "Vipul Chawla"]}, {"listNum": 23, "room": "617", "subgroup": "Gupta Family", "names": ["Vivek Gupta", "Kanika Gupta", "Aarna Gupta"]}, {"listNum": 24, "room": "627", "subgroup": "Gupta Family", "names": ["Shamika Velho", "Mayura Kumar"]}, {"listNum": 25, "room": "614", "subgroup": "Gupta Family", "names": ["Rashmi Agrawal", "Anoop Agrawal"]}, {"listNum": 26, "room": "613", "subgroup": "Gupta Family", "names": ["Devina Gupta", "Saachi Gupta", "Navya Chawla"]}, {"listNum": 27, "room": "611", "subgroup": "Gupta Family", "names": ["Priti Rao", "Ashwin Rao"]}, {"listNum": 28, "room": "612", "subgroup": "Gupta Family", "names": ["Veena Gupta", "Gopal Gupta"]}, {"listNum": 100, "room": "615", "subgroup": "Gupta Family", "names": ["Vinay Piparsania", "Hansa Piparsania"]}, {"listNum": 107, "room": "618", "subgroup": "Gupta Family", "names": ["Vishvaraj Velho", "Vivaan Gupta"]}, {"listNum": 12, "room": "801", "subgroup": "Jain Core", "names": ["Pankaj Jain", "Sippy Jain"]}, {"listNum": 13, "room": "804", "subgroup": "Jain Core", "names": ["Manik Jain", "Purva Chawla"]}, {"listNum": 14, "room": "803", "subgroup": "Jain Core", "names": ["Ivaan Jain"]}, {"listNum": 15, "room": "815", "subgroup": "Jain Core", "names": ["Vinita Chawla", "Prateek Chawla"]}, {"listNum": 53, "room": "826", "subgroup": "Jain Core", "names": ["Ishhita Baijal", "Rituraaj Baijal", "Ishkriti Baijal"]}, {"listNum": 29, "room": "511", "subgroup": "Jain Family - Pankaj Side", "names": ["Samita Bhatia", "Ashish Bhatia"]}, {"listNum": 40, "room": "512", "subgroup": "Jain Family - Pankaj Side", "names": ["Savita Aggarwal"]}, {"listNum": 41, "room": "503", "subgroup": "Jain Family - Pankaj Side", "names": ["Ruchi Goel", "Rajeev Goel"]}, {"listNum": 42, "room": "515", "subgroup": "Jain Family - Pankaj Side", "names": ["Raghav Goyal"]}, {"listNum": 43, "room": "514", "subgroup": "Jain Family - Pankaj Side", "names": ["Neeru Goyal", "Pradeep Goyal"]}, {"listNum": 44, "room": "513", "subgroup": "Jain Family - Pankaj Side", "names": ["Nalini Bansal"]}, {"listNum": 45, "room": "516", "subgroup": "Jain Family - Pankaj Side", "names": ["Natasha Jain", "Priyank Sukhija"]}, {"listNum": 46, "room": "519", "subgroup": "Sagar Family - Sippy Side", "names": ["Sanjeev Sagar", "Seema Sagar"]}, {"listNum": 47, "room": "525", "subgroup": "Sagar Family - Sippy Side", "names": ["Aanchal Jain", "Ankit Jain", "Amey Jain"]}, {"listNum": 48, "room": "517", "subgroup": "Sagar Family - Sippy Side", "names": ["Ajay Sagar", "Manisha Sagar"]}, {"listNum": 49, "room": "521", "subgroup": "Sagar Family - Sippy Side", "names": ["Rachna Gupta", "Vidur Gupta"]}, {"listNum": 50, "room": "523", "subgroup": "Sagar Family - Sippy Side", "names": ["Ishaan Gupta", "Sunaina Gupta"]}, {"listNum": 81, "room": "524", "subgroup": "Sagar Family - Sippy Side", "names": ["Svar Gupta", "Kairav Gupta"]}, {"listNum": 51, "room": "522", "subgroup": "Sagar Family - Sippy Side", "names": ["Ishhita Gupta", "Krishna Rao"]}, {"listNum": 52, "room": "518", "subgroup": "Sagar Family - Sippy Side", "names": ["Sanya Sagar"]}, {"listNum": 54, "room": "520", "subgroup": "Sagar Family - Sippy Side", "names": ["Mohit Batra", "Vandana Batra"]}, {"listNum": 20, "room": "317", "subgroup": "Gupta Parent's Friends", "names": ["Piyush Saraf", "Smriti Saraf"]}, {"listNum": 94, "room": "311", "subgroup": "Gupta Parent's Friends", "names": ["Hema Bhansali", "Anish Bhansali"]}, {"listNum": 95, "room": "312", "subgroup": "Gupta Parent's Friends", "names": ["Archna Sobti", "Sunil Sobti"]}, {"listNum": 96, "room": "325", "subgroup": "Gupta Parent's Friends", "names": ["Sahil Desai", "Sonal Desai"]}, {"listNum": 97, "room": "316", "subgroup": "Gupta Parent's Friends", "names": ["Rahul Sonthalia", "Sweta Sonthalia"]}, {"listNum": 98, "room": "319", "subgroup": "Gupta Parent's Friends", "names": ["Rohit Kapoor", "Thalia Praxedes"]}, {"listNum": 99, "room": "318", "subgroup": "Gupta Parent's Friends", "names": ["Bob Bhalla", "Anant Iyer"]}, {"listNum": 101, "room": "320", "subgroup": "Gupta Parent's Friends", "names": ["Ajay Gaggar", "Rajshree Gaggar"]}, {"listNum": 102, "room": "322", "subgroup": "Gupta Parent's Friends", "names": ["Gaurav Arora", "Surbhi Arora"]}, {"listNum": 30, "room": "411", "subgroup": "Pankaj/Sippy Friends", "names": ["Sukanto Choudhury", "Nomita Choudhury"]}, {"listNum": 31, "room": "412", "subgroup": "Pankaj/Sippy Friends", "names": ["Malini Sikka", "Sanjay Sikka"]}, {"listNum": 32, "room": "415", "subgroup": "Pankaj/Sippy Friends", "names": ["Subhag Singh"]}, {"listNum": 33, "room": "416", "subgroup": "Pankaj/Sippy Friends", "names": ["Anju Suri", "Sushil Suri"]}, {"listNum": 34, "room": "428", "subgroup": "Pankaj/Sippy Friends", "names": ["\u00dcst\u00fcner Akpinar", "Gozde Akpinar", "Ece Akp\u0131nar"]}, {"listNum": 35, "room": "417", "subgroup": "Pankaj/Sippy Friends", "names": ["Marco Medini", "Mari Medini"]}, {"listNum": 36, "room": "418", "subgroup": "Pankaj/Sippy Friends", "names": ["Mia Medini", "Matilde Medini", "Martina Medini"]}, {"listNum": 37, "room": "420", "subgroup": "Pankaj/Sippy Friends", "names": ["Rahul Bubna", "Puja Bubna"]}, {"listNum": 39, "room": "421", "subgroup": "Pankaj/Sippy Friends", "names": ["Mamta Suri"]}, {"listNum": 105, "room": "425", "subgroup": "Pankaj/Sippy Friends", "names": ["Vishal Mehra", "Leena Mehra"]}, {"listNum": 108, "room": "422", "subgroup": "Pankaj/Sippy Friends", "names": ["Ramandeep Arora", "Radhika Singh"]}, {"listNum": 55, "room": "334", "subgroup": "Rohit's Calcutta Friends", "names": ["Shivraj Jaiswal", "Rhea Jaiswal"]}, {"listNum": 56, "room": "335", "subgroup": "Rohit's Calcutta Friends", "names": ["Piyush Choubey", "Shantae Choubey"]}, {"listNum": 57, "room": "336", "subgroup": "Rohit's Calcutta Friends", "names": ["Anirudh Chirimar", "Sakshi Chirimar"]}, {"listNum": 58, "room": "337", "subgroup": "Rohit's Calcutta Friends", "names": ["Umang Arora", "Shikha Bahal"]}, {"listNum": 60, "room": "331", "subgroup": "Rohit's Calcutta Friends", "names": ["Akash Sachdev", "Malika Bhutani"]}, {"listNum": 61, "room": "356", "subgroup": "Rohit's Calcutta Friends", "names": ["Aditya Nag", "Sneha Chatterjee"]}, {"listNum": 62, "room": "357", "subgroup": "Rohit's Calcutta Friends", "names": ["Preksha Dugar", "Harsh Kotia"]}, {"listNum": 63, "room": "353", "subgroup": "Rohit's Calcutta Friends", "names": ["Udisha Patodia", "Rayan Patel"]}, {"listNum": 75, "room": "339", "subgroup": "Rohit's Calcutta Friends", "names": ["Agrim Chakravarty", "Dhruv Mahajan"]}, {"listNum": 76, "room": "340", "subgroup": "Rohit's Calcutta Friends", "names": ["Anant Raj Pathak", "Ofra"]}, {"listNum": 111, "room": "TBD-111", "subgroup": "Rohit's Calcutta Friends", "names": ["Dhruv Mahajan"]}, {"listNum": 59, "room": "034", "subgroup": "Rohit's Delhi Friends", "names": ["Samarth Mehta", "Sumeet Mehta"]}, {"listNum": 64, "room": "035", "subgroup": "Rohit's Delhi Friends", "names": ["Ayush Bajoria", "Naina Bajoria"]}, {"listNum": 66, "room": "045", "subgroup": "Rohit's Delhi Friends", "names": ["Awral Beri", "Sanjana Batra"]}, {"listNum": 67, "room": "038", "subgroup": "Rohit's Delhi Friends", "names": ["Viraj Gadhoke", "Vasudha Gadhoke"]}, {"listNum": 68, "room": "040", "subgroup": "Rohit's Delhi Friends", "names": ["Sambhav Kapur", "Pranati Khanna"]}, {"listNum": 69, "room": "041", "subgroup": "Rohit's Delhi Friends", "names": ["Pranav Sharma", "Prarthana Kumar"]}, {"listNum": 70, "room": "044", "subgroup": "Rohit's Delhi Friends", "names": ["Vidhit Tulshan", "Priya Tulshan"]}, {"listNum": 71, "room": "047", "subgroup": "Rohit's Delhi Friends", "names": ["Adishree Singh", "Sidak Bhattal"]}, {"listNum": 72, "room": "048", "subgroup": "Rohit's Delhi Friends", "names": ["Abhinav Grover", "Supriya Grover"]}, {"listNum": 73, "room": "049", "subgroup": "Rohit's Delhi Friends", "names": ["Rubin Sabharwal", "Ridhima Bhatia"]}, {"listNum": 74, "room": "050", "subgroup": "Rohit's Delhi Friends", "names": ["Raghav Gupta", "Shweta Kapur"]}, {"listNum": 103, "room": "046", "subgroup": "Rohit's Delhi Friends", "names": ["Lyla Beri"]}, {"listNum": 77, "room": "234", "subgroup": "Ratnam's Friends - India", "names": ["Aanchal Suri", "Abhishek Bhayana"]}, {"listNum": 78, "room": "235", "subgroup": "Ratnam's Friends - India", "names": ["Anupam Jaina", "Pallavi Jain"]}, {"listNum": 79, "room": "236", "subgroup": "Ratnam's Friends - India", "names": ["Aneesh Goel", "Riya Aggarwal"]}, {"listNum": 80, "room": "239", "subgroup": "Ratnam's Friends - India", "names": ["Noor Arora", "Vineti Dutta"]}, {"listNum": 82, "room": "237", "subgroup": "Ratnam's Friends - India", "names": ["Sameer Gujral", "Sonia Modi"]}, {"listNum": 83, "room": "238", "subgroup": "Ratnam's Friends - India", "names": ["Neha Pahwa", "Utkarshh Pahwa"]}, {"listNum": 84, "room": "240", "subgroup": "Ratnam's Friends - India", "names": ["Jaiveer Khurana", "Shikha Sharma"]}, {"listNum": 85, "room": "241", "subgroup": "Ratnam's Friends - India", "names": ["Rishabh Jain", "Saumya Swarup"]}, {"listNum": 86, "room": "232", "subgroup": "Ratnam's Friends - India", "names": ["Labham Sogani", "Silky Sogani", "Jinaya Sogani"]}, {"listNum": 104, "room": "233", "subgroup": "Ratnam's Friends - India", "names": ["Soham Sogani"]}, {"listNum": 109, "room": "231", "subgroup": "Ratnam's Friends - India", "names": ["Safia Livingston"]}, {"listNum": 110, "room": "244", "subgroup": "Ratnam's Friends - India", "names": ["Piyush Choudhary", "Prarthna Sharma"]}, {"listNum": 87, "room": "131", "subgroup": "Ratnam's Friends - Intl", "names": ["Cathy Han", "Chase Hu"]}, {"listNum": 88, "room": "132", "subgroup": "Ratnam's Friends - Intl", "names": ["Bernie Siu", "Wilson Vu"]}, {"listNum": 89, "room": "133", "subgroup": "Ratnam's Friends - Intl", "names": ["Eric Levine", "Adar Arnon"]}, {"listNum": 90, "room": "146", "subgroup": "Ratnam's Friends - Intl", "names": ["Rachel Choi", "Melissa Villanueva"]}, {"listNum": 91, "room": "145", "subgroup": "Ratnam's Friends - Intl", "names": ["Mahrukh Malik", "Ayezan Malik", "Zamrez Malik & Zahraan Malik"]}, {"listNum": 92, "room": "139", "subgroup": "Ratnam's Friends - Intl", "names": ["Irene Kwok", "Charlotte Chang"]}, {"listNum": 93, "room": "143", "subgroup": "Ratnam's Friends - Intl", "names": ["Masato Nakamura", "Camilo Pabon"]}];
+
+function baseName(n) { return n.replace(/\s*\([^)]*\)\s*$/, '').trim(); }
+
+function statusClass(v) {
+  v = (v || '').toLowerCase();
+  if (v.startsWith('yes')) return { cls: 'yes', label: 'Sent' };
+  if (v.startsWith('error')) return { cls: 'err', label: 'Error' };
+  if (v.replace(/[\s-]/g,'') === 'nopickup') return { cls: 'nopickup', label: 'No Pickup' };
+  if (v.replace(/[\s-]/g,'') === 'nodropoff') return { cls: 'nopickup', label: 'No Dropoff' };
+  return { cls: 'no', label: 'Not sent' };
+}
+
+const FIELD_MAP = { hotel: 'hotelConfirmationSent', flight: 'flightConfirmationSent', prearrival: 'preArrivalWelcomeSent', predep: 'preDepartureReminderSent' };
+const OPTIONS_MAP = {
+  hotel: ['Ok to send', 'Yes-Sent', 'Error wait'],
+  flight: ['Ok to send', 'Yes-Sent', 'Error wait', 'No Pickup'],
+  prearrival: ['Ok to send', 'Yes-Sent', 'Error wait', 'No Pickup'],
+  predep: ['Ok to send', 'Yes-Sent', 'Error wait', 'No Dropoff'],
+};
+
+async function updateStatus(guestName, col, value) {
+  const key = baseName(guestName);
+  await fetch('/.netlify/functions/update-tracker', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ type: 'message', guestName: key, field: FIELD_MAP[col], value }),
+  }).catch(e => console.warn('update failed', e));
+  ROWS.forEach(r => { if (baseName(r.name) === key) r[col] = value; });
+  render();
+}
+
+async function updateBool(name, listNum, col, checked) {
+  const key = baseName(name);
+  if (col === 'received') {
+    await fetch('/.netlify/functions/update-tracker', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ type: 'transportReceived', guestName: key, value: checked }),
+    }).catch(e => console.warn('update failed', e));
+    ROWS.forEach(r => { if (baseName(r.name) === key) r.received = checked; });
+  } else {
+    await fetch('/.netlify/functions/update-tracker', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ type: 'roomCheckedIn', listNum, value: checked }),
+    }).catch(e => console.warn('update failed', e));
+    // Per-room: applies to every guest sharing this room, not just the one clicked
+    ROWS.forEach(r => { if (r.room === listNum) r.checkedin = checked; });
+  }
+  render();
+}
+
+let ROWS = [];
+let sortState = { col: 'room', dir: 1 };
+
+async function load() {
+  const res = await fetch('/.netlify/functions/get-tracker', { cache: 'no-store' });
+  const data = await res.json();
+
+  ROWS = [];
+  ROOMS.forEach(r => {
+    r.names.forEach(name => {
+      const key = baseName(name);
+      const msg = (data.messages && data.messages[key]) || {};
+      ROWS.push({
+        room: r.listNum, roomLabel: r.room, subgroup: r.subgroup, name: name,
+        hotel: msg.hotelConfirmationSent, flight: msg.flightConfirmationSent,
+        prearrival: msg.preArrivalWelcomeSent, predep: msg.preDepartureReminderSent,
+        received: !!(data.transportReceived && data.transportReceived[key]),
+        checkedin: !!(data.roomCheckedIn && data.roomCheckedIn[String(r.listNum)]),
+      });
+    });
+  });
+  render();
+}
+
+const BOOL_COLS = ['received', 'checkedin'];
+
+function updateFilterValOptions() {
+  const col = document.getElementById('filterCol').value;
+  const sel = document.getElementById('filterVal');
+  if (BOOL_COLS.includes(col)) {
+    sel.innerHTML = `<option value="">Either</option><option value="done">Done</option><option value="pending">Still pending</option>`;
+  } else {
+    sel.innerHTML = `<option value="">Any status</option><option value="sent">Sent</option><option value="not_sent">Not sent yet</option><option value="error">Error/Blocked</option>`;
+  }
+}
+
+function render() {
+  const q = document.getElementById('filterInput').value.trim().toLowerCase();
+  const col = document.getElementById('filterCol').value;
+  const val = document.getElementById('filterVal').value;
+
+  let rows = ROWS.filter(r => {
+    if (q && !(r.name.toLowerCase().includes(q) || String(r.room).includes(q) || r.roomLabel.toLowerCase().includes(q))) return false;
+    if (col && val) {
+      if (BOOL_COLS.includes(col)) {
+        const isDone = !!r[col];
+        if (val === 'done' && !isDone) return false;
+        if (val === 'pending' && isDone) return false;
+      } else {
+        const sc = statusClass(r[col]);
+        const want = val === 'sent' ? 'yes' : val === 'error' ? 'err' : 'no';
+        if (sc.cls !== want && !(want === 'no' && sc.cls === 'nopickup')) return false;
+      }
+    }
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    const c = sortState.col;
+    const av = a[c], bv = b[c];
+    if (typeof av === 'boolean') return (av === bv ? 0 : av ? -1 : 1) * sortState.dir;
+    return String(av).localeCompare(String(bv)) * sortState.dir;
+  });
+
+  document.getElementById('resultCount').textContent = rows.length + ' of ' + ROWS.length + ' guest rows';
+  window.CURRENT_ROWS = rows; // used by downloadExcel()
+
+  document.getElementById('tbody').innerHTML = rows.map(r => {
+    const h = statusClass(r.hotel), f = statusClass(r.flight), p = statusClass(r.prearrival), d = statusClass(r.predep);
+    const selectHtml = (col, current, cls) => {
+      const opts = OPTIONS_MAP[col];
+      const currentVal = current || 'Ok to send';
+      const optsHtml = opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join('');
+      return `<select class="statusSelect ${cls}" onchange="updateStatus('${r.name.replace(/'/g,"\\'")}', '${col}', this.value)">${optsHtml}</select>`;
+    };
+    return `<tr class="${r.checkedin ? 'checked' : ''}">
+      <td>${r.room} (Rm ${r.roomLabel})</td>
+      <td>${r.name}</td>
+      <td>${r.subgroup}</td>
+      <td>${selectHtml('hotel', r.hotel, h.cls)}</td>
+      <td>${selectHtml('flight', r.flight, f.cls)}</td>
+      <td>${selectHtml('prearrival', r.prearrival, p.cls)}</td>
+      <td>${selectHtml('predep', r.predep, d.cls)}</td>
+      <td><label style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" ${r.received ? 'checked' : ''} onchange="updateBool('${r.name.replace(/'/g,"\\'")}', ${r.room}, 'received', this.checked)">
+        ${r.received ? '<span class="yes">✓ Received</span>' : '<span class="no">Not yet</span>'}
+      </label></td>
+      <td><label style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" ${r.checkedin ? 'checked' : ''} onchange="updateBool('${r.name.replace(/'/g,"\\'")}', ${r.room}, 'checkedin', this.checked)">
+        ${r.checkedin ? '<span class="yes">✓ Checked in</span>' : '<span class="no">Not yet</span>'}
+      </label></td>
+    </tr>`;
+  }).join('');
+}
+
+function downloadExcel() {
+  const rows = window.CURRENT_ROWS || ROWS;
+  const data = rows.map(r => ({
+    'List #': r.room,
+    'Room': r.roomLabel,
+    'Guest': r.name,
+    'Subgroup': r.subgroup,
+    'Hotel Confirmation': statusClass(r.hotel).label,
+    'Flight Confirmation': statusClass(r.flight).label,
+    'Pre-Arrival Welcome': statusClass(r.prearrival).label,
+    'Pre-Departure Reminder': statusClass(r.predep).label,
+    'Transport Received': r.received ? 'Yes' : 'No',
+    'Room Checked In': r.checkedin ? 'Yes' : 'No',
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Tracker Status');
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '');
+  XLSX.writeFile(wb, `Guest_Tracker_Status_${stamp}.xlsx`);
+}
+
+function sortBy(col) {
+  sortState.dir = (sortState.col === col) ? -sortState.dir : 1;
+  sortState.col = col;
+  render();
+}
+
+document.getElementById('filterInput').addEventListener('input', render);
+document.getElementById('filterCol').addEventListener('change', () => { updateFilterValOptions(); render(); });
+document.getElementById('filterVal').addEventListener('change', render);
+updateFilterValOptions();
+load();
+</script>
+</body>
+</html>

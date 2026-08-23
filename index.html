@@ -160,7 +160,7 @@ function trackerStatus(name, field) {
   const v = ((TRACKER.messages[baseName(name)] || {})[field] || '').toLowerCase();
   if (v.startsWith('yes')) return 'sent';
   if (v.startsWith('error')) return 'error';
-  if (v.replace(/[\s-]/g, '') === 'nopickup') return 'no_pickup';
+  if (['nopickup', 'nodropoff'].includes(v.replace(/[\s-]/g, ''))) return 'no_pickup';
   return 'not_sent';
 }
 function hotelConfirmationStatus(name) { return trackerStatus(name, 'hotelConfirmationSent'); }
@@ -399,6 +399,25 @@ function focusedOccupant(room) {
 // contain characters (apostrophes, quotes) that would break a hand-built
 // onclick="..." attribute string. Reading it back off a data-* attribute
 // sidesteps that entirely.
+document.addEventListener('click', (e) => {
+  const banner = e.target.closest('#next-action-banner');
+  if (banner) {
+    const targetId = banner.getAttribute('data-target');
+    if (!targetId) return;
+    if (banner.getAttribute('data-expand-hotel') === '1') {
+      const collapsible = document.querySelector('.hotel-collapsible');
+      const header = document.getElementById('hotel-section-header');
+      if (collapsible && collapsible.classList.contains('collapsed')) {
+        collapsible.classList.remove('collapsed');
+        if (header) { const chev = header.querySelector('.chevron'); if (chev) chev.textContent = '▾'; }
+      }
+    }
+    const target = document.getElementById(targetId);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+});
+
 document.addEventListener('change', (e) => {
   const cb = e.target.closest('.received-checkbox');
   if (cb) {
@@ -568,7 +587,7 @@ function renderCardInner(listNum, focusName) {
   // consistency across every guest rather than disappearing for some.
   let flightConfRow;
   if (noPickup) {
-    flightConfRow = `<div class="send-row">
+    flightConfRow = `<div class="send-row" id="action-flightconf">
         <button class="btn" disabled style="opacity:.5;">No Flight Conf Required - No pickup</button>
       </div>`;
   } else {
@@ -579,7 +598,7 @@ function renderCardInner(listNum, focusName) {
     const authFCPhone = DATA.wa_flightconf_phone ? DATA.wa_flightconf_phone[baseName(repName)] : null;
     const flightConfMsg = authFCMsg || MSGS.preArrival(repName, arrLeg);
     const flightConfWa = waLink(authFCPhone || primaryPhone, flightConfMsg);
-    flightConfRow = `<div class="send-row">
+    flightConfRow = `<div class="send-row" id="action-flightconf">
         ${(() => {
           const status = flightConfirmationStatus(repName);
           if (status === 'no_pickup') return `<button class="btn" disabled style="opacity:.5;">No Flight Conf Required - No pickup</button>`;
@@ -603,6 +622,14 @@ function renderCardInner(listNum, focusName) {
       <ul class="guest-list">
         ${arrVan.names.map(n => {
           const seat = seatStatus(n);
+          const personLeg = findFlights(n, 'ARRIVAL')[0];
+          const personNoPickup = !personLeg || (personLeg.pickup && personLeg.pickup.trim().startsWith('N'));
+          if (personNoPickup) {
+            // Own arrangements - no pickup happening, nothing to mark received
+            return `<li class="${n===repName?'self':''}" style="padding:8px 10px;color:var(--muted);">
+              ${n}${n===repName?' (this guest)':''} — ${personTag(n)}${seat ? ` · ${seat}` : ''} <span style="font-style:italic;">(own arrangements — no pickup)</span>
+            </li>`;
+          }
           const received = transportReceivedStatus(n);
           const rowStyle = received
             ? 'background:#c3e6cb;border-radius:8px;padding:8px 10px;margin:4px 0;border-left:5px solid #1a5c2a;'
@@ -627,7 +654,7 @@ function renderCardInner(listNum, focusName) {
         </div>
       </div>`;
     transportPickupCard = `
-      <div class="info-card">
+      <div class="info-card" id="action-received">
         <div class="task-title">🚐 Transport Pickup${arrVan ? ' — ' + arrVan.van_id : ''}</div>
         <div class="task-facts">
           <span class="fact-line"><span class="fact-label">Estimated Pickup Time:</span> ${arrLeg.pickup === 'N' ? 'Not needed (own arrangements)' : (arrLeg.pickupTime || 'TBC')}</span>
@@ -655,7 +682,7 @@ function renderCardInner(listNum, focusName) {
   const gateDateStr = arrLeg && arrLeg.date ? arrLeg.date : room.checkIn;
   const daysOut = daysUntil(gateDateStr);
   const tooEarly = daysOut !== null && daysOut > 2;
-  const preArrivalWelcomeRow = `<div class="send-row">
+  const preArrivalWelcomeRow = `<div class="send-row" id="action-prearrival">
       ${(() => {
         const status = preArrivalWelcomeStatus(repName);
         if (status === 'error') return `<button class="btn" disabled style="opacity:.5;">Blocked — check status</button>`;
@@ -678,7 +705,7 @@ function renderCardInner(listNum, focusName) {
 
   const roomCheckedIn = roomCheckedInStatus(room.listNum);
   const checkinCard = `
-    <div class="send-row" style="background:${roomCheckedIn ? '#c3e6cb' : '#fff3cd'};border-radius:8px;padding:10px 12px;border-left:5px solid ${roomCheckedIn ? '#1a5c2a' : '#b38600'};">
+    <div class="send-row" id="action-checkedin" style="background:${roomCheckedIn ? '#c3e6cb' : '#fff3cd'};border-radius:8px;padding:10px 12px;border-left:5px solid ${roomCheckedIn ? '#1a5c2a' : '#b38600'};">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;width:100%;">
         <input type="checkbox" class="checkedin-checkbox" data-room="${room.listNum}" ${roomCheckedIn ? 'checked' : ''} style="width:22px;height:22px;flex-shrink:0;">
         <span style="font-weight:700;font-size:14px;color:${roomCheckedIn ? '#1a5c2a' : '#856404'};">${roomCheckedIn ? '✅ GUEST CHECKED IN' : '⏳ NOT CHECKED IN YET'}</span>
@@ -706,7 +733,7 @@ function renderCardInner(listNum, focusName) {
   const authDepPhone = DATA.wa_departure_phone ? DATA.wa_departure_phone[baseName(repName)] : null;
   const preDepMsg = authDepMsg || MSGS.preDeparture(repName, room, depLeg);
   const preDepWa = waLink(authDepPhone || primaryPhone, preDepMsg);
-  const preDepartureRow = `<div class="send-row">
+  const preDepartureRow = `<div class="send-row" id="action-predeparture">
       ${(() => {
         if (noDropoff) return `<button class="btn" disabled style="opacity:.5;">No Pre-Departure Reminder Required - No dropoff</button>`;
         const status = preDepartureReminderStatus(repName);
@@ -762,23 +789,26 @@ function renderCardInner(listNum, focusName) {
   const fStatus = flightConfirmationStatus(repName);
   const pStatus = preArrivalWelcomeStatus(repName);
   const dStatus = preDepartureReminderStatus(repName);
-  if (hStatus === 'error') nextAction = { text: '⚠ Hotel Confirmation is blocked — check status', color: '#a33' };
-  else if (hStatus === 'not_sent' && hotelWa) nextAction = { text: '📤 Send Hotel Confirmation', color: '#8a6d1f' };
-  else if (fStatus === 'error') nextAction = { text: '⚠ Flight Confirmation is blocked — check status', color: '#a33' };
-  else if (!noPickup && fStatus === 'not_sent') nextAction = { text: '📤 Send Flight Confirmation Message', color: '#8a6d1f' };
-  else if (pStatus === 'error') nextAction = { text: '⚠ Pre-Arrival Welcome is blocked — check status', color: '#a33' };
-  else if (!tooEarly && pStatus !== 'sent') nextAction = { text: '📤 Send Pre-Arrival Welcome Message', color: '#8a6d1f' };
-  else if (!noPickup && arrLeg && !transportReceivedStatus(repName)) nextAction = { text: '🚐 Mark Transport Received once picked up', color: '#8a6d1f' };
-  else if (!roomCheckedIn) nextAction = { text: '🏨 Mark Guest Checked In once at hotel', color: '#8a6d1f' };
-  else if (dStatus === 'error') nextAction = { text: '⚠ Pre-Departure Reminder is blocked — check status', color: '#a33' };
-  else if (!noDropoff && !depTooEarly && dStatus !== 'sent') nextAction = { text: '📤 Send Pre-Departure Reminder', color: '#8a6d1f' };
-  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `⏳ Pre-Arrival Welcome opens in ${daysOut - 2} day${daysOut - 2 === 1 ? '' : 's'}`, color: '#888' };
-  else if (depTooEarly && dStatus !== 'sent' && !noDropoff) nextAction = { text: `⏳ Pre-Departure Reminder opens in ${(() => { const d = Math.ceil((hoursOut - 28) / 24); return d + (d === 1 ? ' day' : ' days'); })()}`, color: '#888' };
-  else nextAction = { text: '✅ All caught up for this guest right now', color: '#1a5c2a' };
+  if (hStatus === 'error') nextAction = { text: 'Hotel Confirmation is blocked — check status', icon: '⚠', color: '#a33', target: 'action-hotelconf', expandHotel: true };
+  else if (hStatus === 'not_sent' && hotelWa) nextAction = { text: 'Send Hotel Confirmation', icon: '📤', color: '#8a6d1f', target: 'action-hotelconf', expandHotel: true };
+  else if (fStatus === 'error') nextAction = { text: 'Flight Confirmation is blocked — check status', icon: '⚠', color: '#a33', target: 'action-flightconf' };
+  else if (!noPickup && fStatus === 'not_sent') nextAction = { text: 'Send Flight Confirmation Message', icon: '📤', color: '#8a6d1f', target: 'action-flightconf' };
+  else if (pStatus === 'error') nextAction = { text: 'Pre-Arrival Welcome is blocked — check status', icon: '⚠', color: '#a33', target: 'action-prearrival' };
+  else if (!tooEarly && pStatus !== 'sent') nextAction = { text: 'Send Pre-Arrival Welcome Message', icon: '📤', color: '#8a6d1f', target: 'action-prearrival' };
+  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${daysOut - 2} day${daysOut - 2 === 1 ? '' : 's'}`, icon: '⏳', color: '#888', target: null };
+  else if (!noPickup && arrLeg && !transportReceivedStatus(repName)) nextAction = { text: 'Mark Transport Received once picked up', icon: '🚐', color: '#8a6d1f', target: 'action-received' };
+  else if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin' };
+  else if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };
+  else if (!noDropoff && !depTooEarly && dStatus !== 'sent') nextAction = { text: 'Send Pre-Departure Reminder', icon: '📤', color: '#8a6d1f', target: 'action-predeparture' };
+  else if (!noDropoff && depTooEarly && dStatus !== 'sent') nextAction = { text: `Send Pre Departure Reminder in ${(() => { const d = Math.ceil((hoursOut - 28) / 24); return d + (d === 1 ? ' day' : ' days'); })()}`, icon: '⏳', color: '#888', target: null };
+  else nextAction = { text: 'All caught up for this guest right now', icon: '✅', color: '#1a5c2a', target: null };
 
+  const bannerLabel = nextAction.target ? 'NEXT ACTION' : (nextAction.icon === '✅' ? 'STATUS' : 'UPCOMING');
   const nextActionBanner = `
-    <div style="background:#fff;border:2px solid ${nextAction.color};border-radius:8px;padding:12px 14px;margin-bottom:14px;font-weight:700;font-size:15px;color:${nextAction.color};">
-      ${nextAction.text}
+    <div id="next-action-banner" data-target="${nextAction.target || ''}" data-expand-hotel="${nextAction.expandHotel ? '1' : ''}"
+      style="background:#fff;border:2px solid ${nextAction.color};border-radius:8px;padding:12px 14px;margin-bottom:14px;${nextAction.target ? 'cursor:pointer;' : ''}">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.5px;color:${nextAction.color};margin-bottom:2px;">${bannerLabel}${nextAction.target ? ' — TAP TO GO THERE' : ''}</div>
+      <div style="font-weight:700;font-size:15px;color:${nextAction.color};">${nextAction.icon} ${nextAction.text}</div>
     </div>`;
 
   card.style.background = roomCheckedIn ? '#c3e6cb' : '';
@@ -790,9 +820,9 @@ function renderCardInner(listNum, focusName) {
     <div class="section-label">📞 Contact</div>
     ${contactRows}
 
-    <div class="section-label hotel-toggle" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel Details &gt;&gt; <span class="chevron" style="float:right;">▸</span></div>
+    <div class="section-label hotel-toggle" id="hotel-section-header" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel Info &gt;&gt; Click for details <span class="chevron" style="float:right;">▸</span></div>
     <div class="hotel-collapsible collapsed">
-      <div class="send-row">
+      <div class="send-row" id="action-hotelconf">
         ${(() => {
           const status = hotelConfirmationStatus(primaryName);
           if (!hotelWa) return `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
