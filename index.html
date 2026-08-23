@@ -604,11 +604,14 @@ function renderCardInner(listNum, focusName) {
         ${arrVan.names.map(n => {
           const seat = seatStatus(n);
           const received = transportReceivedStatus(n);
-          const safeId = 'recv-' + n.replace(/[^a-zA-Z0-9]/g, '-');
-          return `<li class="${n===repName?'self':''}">
+          const rowStyle = received
+            ? 'background:#c3e6cb;border-radius:8px;padding:8px 10px;margin:4px 0;border-left:5px solid #1a5c2a;'
+            : 'background:#fff3cd;border-radius:8px;padding:8px 10px;margin:4px 0;border-left:5px solid #b38600;';
+          return `<li class="${n===repName?'self':''}" style="${rowStyle}">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-              <input type="checkbox" class="received-checkbox" data-guest="${n.replace(/"/g,'&quot;')}" ${received ? 'checked' : ''} style="width:18px;height:18px;flex-shrink:0;">
-              <span>${n}${n===repName?' (this guest)':''} — ${personTag(n)}${seat ? ` · ${seat}` : ''}${received ? ' <span style="color:var(--green);font-weight:600;">✓ Received</span>' : ''}</span>
+              <input type="checkbox" class="received-checkbox" data-guest="${n.replace(/"/g,'&quot;')}" ${received ? 'checked' : ''} style="width:22px;height:22px;flex-shrink:0;">
+              <span style="flex:1;">${n}${n===repName?' (this guest)':''} — ${personTag(n)}${seat ? ` · ${seat}` : ''}</span>
+              <span style="font-weight:700;font-size:12px;white-space:nowrap;color:${received ? '#1a5c2a' : '#856404'};">${received ? '✅ RECEIVED' : '⏳ WAITING'}</span>
             </label>
           </li>`;
         }).join('')}
@@ -675,10 +678,10 @@ function renderCardInner(listNum, focusName) {
 
   const roomCheckedIn = roomCheckedInStatus(room.listNum);
   const checkinCard = `
-    <div class="send-row">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" class="checkedin-checkbox" data-room="${room.listNum}" ${roomCheckedIn ? 'checked' : ''} style="width:18px;height:18px;flex-shrink:0;">
-        <span style="font-weight:600;">Guest Checked In${roomCheckedIn ? ' <span style="color:var(--green);">✓</span>' : ''}</span>
+    <div class="send-row" style="background:${roomCheckedIn ? '#c3e6cb' : '#fff3cd'};border-radius:8px;padding:10px 12px;border-left:5px solid ${roomCheckedIn ? '#1a5c2a' : '#b38600'};">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;width:100%;">
+        <input type="checkbox" class="checkedin-checkbox" data-room="${room.listNum}" ${roomCheckedIn ? 'checked' : ''} style="width:22px;height:22px;flex-shrink:0;">
+        <span style="font-weight:700;font-size:14px;color:${roomCheckedIn ? '#1a5c2a' : '#856404'};">${roomCheckedIn ? '✅ GUEST CHECKED IN' : '⏳ NOT CHECKED IN YET'}</span>
       </label>
     </div>
     <div class="info-card">
@@ -750,14 +753,45 @@ function renderCardInner(listNum, focusName) {
       <div class="info-card"><div class="task-facts">No departure flight on file for this guest.</div></div>`;
   }
 
+  // Single, unmistakable "what to do next" banner - checked in real-world
+  // chronological order (Hotel Conf -> Flight Conf -> Pre-Arrival -> pickup
+  // day -> checked-in -> Pre-Departure), skipping anything not yet
+  // actionable (gated by timing) rather than treating it as "next."
+  let nextAction = null;
+  const hStatus = hotelConfirmationStatus(primaryName);
+  const fStatus = flightConfirmationStatus(repName);
+  const pStatus = preArrivalWelcomeStatus(repName);
+  const dStatus = preDepartureReminderStatus(repName);
+  if (hStatus === 'error') nextAction = { text: '⚠ Hotel Confirmation is blocked — check status', color: '#a33' };
+  else if (hStatus === 'not_sent' && hotelWa) nextAction = { text: '📤 Send Hotel Confirmation', color: '#8a6d1f' };
+  else if (fStatus === 'error') nextAction = { text: '⚠ Flight Confirmation is blocked — check status', color: '#a33' };
+  else if (!noPickup && fStatus === 'not_sent') nextAction = { text: '📤 Send Flight Confirmation Message', color: '#8a6d1f' };
+  else if (pStatus === 'error') nextAction = { text: '⚠ Pre-Arrival Welcome is blocked — check status', color: '#a33' };
+  else if (!tooEarly && pStatus !== 'sent') nextAction = { text: '📤 Send Pre-Arrival Welcome Message', color: '#8a6d1f' };
+  else if (!noPickup && arrLeg && !transportReceivedStatus(repName)) nextAction = { text: '🚐 Mark Transport Received once picked up', color: '#8a6d1f' };
+  else if (!roomCheckedIn) nextAction = { text: '🏨 Mark Guest Checked In once at hotel', color: '#8a6d1f' };
+  else if (dStatus === 'error') nextAction = { text: '⚠ Pre-Departure Reminder is blocked — check status', color: '#a33' };
+  else if (!noDropoff && !depTooEarly && dStatus !== 'sent') nextAction = { text: '📤 Send Pre-Departure Reminder', color: '#8a6d1f' };
+  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `⏳ Pre-Arrival Welcome opens in ${daysOut - 2} day${daysOut - 2 === 1 ? '' : 's'}`, color: '#888' };
+  else if (depTooEarly && dStatus !== 'sent' && !noDropoff) nextAction = { text: `⏳ Pre-Departure Reminder opens in ${(() => { const d = Math.ceil((hoursOut - 28) / 24); return d + (d === 1 ? ' day' : ' days'); })()}`, color: '#888' };
+  else nextAction = { text: '✅ All caught up for this guest right now', color: '#1a5c2a' };
+
+  const nextActionBanner = `
+    <div style="background:#fff;border:2px solid ${nextAction.color};border-radius:8px;padding:12px 14px;margin-bottom:14px;font-weight:700;font-size:15px;color:${nextAction.color};">
+      ${nextAction.text}
+    </div>`;
+
+  card.style.background = roomCheckedIn ? '#c3e6cb' : '';
+  card.style.borderTop = roomCheckedIn ? '6px solid #1a5c2a' : '';
   card.innerHTML = `
     <h2>${headerNames}</h2>
+    ${nextActionBanner}
 
     <div class="section-label">📞 Contact</div>
     ${contactRows}
 
-    <div class="section-label hotel-toggle" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel <span class="chevron" style="float:right;">▾</span></div>
-    <div class="hotel-collapsible">
+    <div class="section-label hotel-toggle" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel <span class="chevron" style="float:right;">▸</span></div>
+    <div class="hotel-collapsible collapsed">
       <div class="send-row">
         ${(() => {
           const status = hotelConfirmationStatus(primaryName);
