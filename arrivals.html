@@ -16,6 +16,7 @@
   main { max-width:1200px; margin:0 auto; padding:12px 12px 60px; }
   .day-section.day-hidden { display:none; }
   .day-header { font-size:1.05rem; font-weight:700; color:var(--navy); border-bottom:3px solid var(--gold); padding-bottom:8px; margin:20px 0 14px; }
+  .own-section-header { font-size:0.92rem; font-weight:700; color:var(--amber); border-bottom:2px solid #fff3cd; padding-bottom:6px; margin:24px 0 12px; }
   .van-card { background:white; border:1px solid #d9d4c8; border-left:4px solid var(--green); border-radius:8px; margin-bottom:14px; overflow:hidden; }
   .van-card.own-arrangement { border-left:4px solid var(--amber); }
   .van-header { background:#eef2e9; padding:8px 14px; display:flex; justify-content:space-between; align-items:center; font-weight:700; color:var(--navy); font-size:0.85rem; }
@@ -51,7 +52,7 @@
 <header>
   <h1>Arrivals Timeline</h1>
   <div class="sub">Ratnam & Rohit · Bangkok · chronological, all arrivals in real pickup/flight order</div>
-  <div class="top-actions"><a href="index.html">← Planner Portal</a></div>
+  <div class="top-actions"><a href="index.html">← Planner Portal</a> <a href="#own-arrangements-section" id="jumpOwnBtn">🚗 Own Arrangements</a></div>
   <nav class="daynav" id="dayNav"></nav>
 </header>
 <main id="main"><div class="loading">Loading arrivals and live status…</div></main>
@@ -268,11 +269,11 @@ function tableHead() {
   return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Seat</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Hotel Check In</th><th>Confirm Check In</th></tr></thead>`;
 }
 
-function renderSlot(slot) {
+function renderSlot(slot, showDate) {
   const rows = slot.names.map(renderPassengerRow).join('');
   const headerClass = slot.own ? 'own-header' : 'van-header';
   const label = slot.own ? '🚗 Own Arrangements' : `🚐 ${slot.van_id}`;
-  const timeLabel = slot.own ? 'No Pickup' : `Estd. Pick up: ${slot.time} hrs`;
+  const timeLabel = slot.own ? (showDate ? fmtDayHeader(slot.date) : 'No Pickup') : `Estd. Pick up: ${slot.time} hrs`;
   return `<div class="van-card ${slot.own ? 'own-arrangement' : ''}">
     <div class="${headerClass}"><span>${label}</span><span>${timeLabel}</span></div>
     <div class="table-wrap"><table class="pax-table">${tableHead()}<tbody>${rows}</tbody></table></div>
@@ -298,12 +299,32 @@ let SORTED_DATES = [];
 
 function renderAll() {
   const main = document.getElementById('main');
-  main.innerHTML = SORTED_DATES.map(date => `
+  const dayHtml = SORTED_DATES.map(date => {
+    const vanSlots = DAY_SLOTS[date].filter(s => !s.own);
+    if (!vanSlots.length) return '';
+    const count = vanSlots.reduce((n,s)=>n+s.names.length,0);
+    return `
     <div class="day-section" data-date="${date}">
-      <div class="day-header">${fmtDayHeader(date)} · ${DAY_SLOTS[date].reduce((n,s)=>n+s.names.length,0)} arriving</div>
+      <div class="day-header">${fmtDayHeader(date)} · ${count} arriving</div>
       <div class="scroll-hint">👉 swipe table sideways to see all columns</div>
-      ${DAY_SLOTS[date].map(renderSlot).join('')}
-    </div>`).join('');
+      ${vanSlots.map(renderSlot).join('')}
+    </div>`;
+  }).join('');
+
+  // All Own Arrangements, across every day, consolidated into one section at the bottom - chronological by actual date+time
+  const allOwnSlots = [];
+  SORTED_DATES.forEach(date => {
+    DAY_SLOTS[date].filter(s => s.own).forEach(s => allOwnSlots.push({ ...s, date, sortKey: date + ' ' + s.time }));
+  });
+  allOwnSlots.sort((a, b) => new Date(a.sortKey) - new Date(b.sortKey));
+  const ownCount = allOwnSlots.reduce((n,s)=>n+s.names.length,0);
+  const ownHtml = allOwnSlots.length ? `
+    <div class="day-section" id="own-arrangements-section">
+      <div class="own-section-header">🚗 Own Arrangements — All Days · ${ownCount} arriving</div>
+      ${allOwnSlots.map(s => renderSlot(s, true)).join('')}
+    </div>` : '';
+
+  main.innerHTML = dayHtml + ownHtml;
 }
 
 function renderDayNav() {
