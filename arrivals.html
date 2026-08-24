@@ -123,6 +123,13 @@ function personTag(name) { return EXPORT.person_tag[name] || 'Adult'; }
 function extractCode(s) { const m = (s||'').match(/\(([A-Z]{3,4})\)/); return m ? m[1] : (s || 'TBC'); }
 function parseAnyDate(dStr) {
   if (!dStr) return null;
+  // Short room-checkIn format like "29-Aug" has no year, and new Date()
+  // silently defaults to 2001 for this pattern - force the correct wedding year.
+  const shortMatch = dStr.match(/^(\d{1,2})-([A-Za-z]{3,})$/);
+  if (shortMatch) {
+    const d = new Date(`${shortMatch[1]} ${shortMatch[2]} 2026`);
+    return isNaN(d) ? null : d;
+  }
   const d = new Date(dStr);
   return isNaN(d) ? null : d;
 }
@@ -269,11 +276,11 @@ function tableHead() {
   return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Seat</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Hotel Check In</th><th>Confirm Check In</th></tr></thead>`;
 }
 
-function renderSlot(slot, showDate) {
+function renderSlot(slot) {
   const rows = slot.names.map(renderPassengerRow).join('');
   const headerClass = slot.own ? 'own-header' : 'van-header';
   const label = slot.own ? '🚗 Own Arrangements' : `🚐 ${slot.van_id}`;
-  const timeLabel = slot.own ? (showDate ? fmtDayHeader(slot.date) : 'No Pickup') : `Estd. Pick up: ${slot.time} hrs`;
+  const timeLabel = slot.own ? 'No Pickup' : `Estd. Pick up: ${slot.time} hrs`;
   return `<div class="van-card ${slot.own ? 'own-arrangement' : ''}">
     <div class="${headerClass}"><span>${label}</span><span>${timeLabel}</span></div>
     <div class="table-wrap"><table class="pax-table">${tableHead()}<tbody>${rows}</tbody></table></div>
@@ -321,7 +328,7 @@ function renderAll() {
   const ownHtml = allOwnSlots.length ? `
     <div class="day-section" id="own-arrangements-section">
       <div class="own-section-header">🚗 Own Arrangements — All Days · ${ownCount} arriving</div>
-      ${allOwnSlots.map(s => renderSlot(s, true)).join('')}
+      ${allOwnSlots.map(renderSlot).join('')}
     </div>` : '';
 
   main.innerHTML = dayHtml + ownHtml;
