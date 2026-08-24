@@ -147,6 +147,14 @@ async function writeTracker(body) {
     console.warn('Could not write tracker state:', e);
   }
 }
+// All writes are chained onto this single queue so overlapping requests can
+// never race - the backend does a read-modify-write with no locking, so two
+// near-simultaneous writes could otherwise silently drop one change.
+let writeQueue = Promise.resolve();
+function queueWrite(body) {
+  writeQueue = writeQueue.then(() => writeTracker(body));
+  return writeQueue;
+}
 
 // markSent() is called the moment a Send button is clicked - no separate
 // manual step. Fire-and-forget: don't block opening WhatsApp on the write.
@@ -154,7 +162,7 @@ function markSent(guestName, field) {
   const key = baseName(guestName);
   TRACKER.messages[key] = TRACKER.messages[key] || {};
   TRACKER.messages[key][field] = 'Yes-Sent'; // update local state immediately for instant UI feedback
-  writeTracker({ type: 'message', guestName: key, field, value: 'Yes-Sent' });
+  queueWrite({ type: 'message', guestName: key, field, value: 'Yes-Sent' });
 }
 
 function trackerStatus(name, field) {
@@ -173,13 +181,13 @@ function transportReceivedStatus(name) { return !!TRACKER.transportReceived[base
 function toggleTransportReceived(name, checked) {
   const key = baseName(name);
   TRACKER.transportReceived[key] = checked;
-  writeTracker({ type: 'transportReceived', guestName: key, value: checked });
+  queueWrite({ type: 'transportReceived', guestName: key, value: checked });
 }
 
 function roomCheckedInStatus(listNum) { return !!TRACKER.roomCheckedIn[String(listNum)]; }
 function toggleRoomCheckedIn(listNum, checked) {
   TRACKER.roomCheckedIn[String(listNum)] = checked;
-  writeTracker({ type: 'roomCheckedIn', listNum, value: checked });
+  queueWrite({ type: 'roomCheckedIn', listNum, value: checked });
 }
 
 const MSGS = {

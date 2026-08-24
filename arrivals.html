@@ -52,8 +52,9 @@
 <header>
   <h1>Arrivals Timeline</h1>
   <div class="sub">Ratnam & Rohit · Bangkok · chronological, all arrivals in real pickup/flight order</div>
-  <div class="top-actions"><a href="index.html">← Planner Portal</a> <a href="#own-arrangements-section" id="jumpOwnBtn">🚗 Own Arrangements</a></div>
+  <div class="top-actions"><a href="index.html">← Planner Portal</a></div>
   <nav class="daynav" id="dayNav"></nav>
+  <div class="top-actions"><a href="#own-arrangements-section" id="jumpOwnBtn">🚗 No Pickup Guests List</a></div>
 </header>
 <main id="main"><div class="loading">Loading arrivals and live status…</div></main>
 
@@ -79,6 +80,16 @@ async function writeTracker(body) {
     if (result.data) TRACKER = { messages: result.data.messages || {}, transportReceived: result.data.transportReceived || {}, roomCheckedIn: result.data.roomCheckedIn || {} };
   } catch (e) { console.warn('writeTracker failed', e); }
 }
+// All writes go through this queue - since the backend does a read-modify-write
+// with no locking, firing overlapping requests can let one silently overwrite
+// another (last-write-wins). Chaining every call onto the same promise forces
+// each write to fully complete (including the server round-trip) before the
+// next one starts, so rapid dropdown/checkbox changes can never race.
+let writeQueue = Promise.resolve();
+function queueWrite(body) {
+  writeQueue = writeQueue.then(() => writeTracker(body));
+  return writeQueue;
+}
 
 function baseName(n) { return (n || '').replace(/\s*\([^)]*\)\s*$/, '').trim(); }
 
@@ -94,18 +105,18 @@ function markSent(name, field) {
   const key = baseName(name);
   TRACKER.messages[key] = TRACKER.messages[key] || {};
   TRACKER.messages[key][field] = 'Yes-Sent';
-  writeTracker({ type: 'message', guestName: key, field, value: 'Yes-Sent' });
+  queueWrite({ type: 'message', guestName: key, field, value: 'Yes-Sent' });
 }
 function transportReceivedStatus(name) { return !!TRACKER.transportReceived[baseName(name)]; }
 function toggleTransportReceived(name, checked) {
   const key = baseName(name);
   TRACKER.transportReceived[key] = checked;
-  writeTracker({ type: 'transportReceived', guestName: key, value: checked });
+  queueWrite({ type: 'transportReceived', guestName: key, value: checked });
 }
 function roomCheckedInStatus(listNum) { return !!TRACKER.roomCheckedIn[String(listNum)]; }
 function toggleRoomCheckedIn(listNum, checked) {
   TRACKER.roomCheckedIn[String(listNum)] = checked;
-  writeTracker({ type: 'roomCheckedIn', listNum, value: checked });
+  queueWrite({ type: 'roomCheckedIn', listNum, value: checked });
 }
 
 // ---- Helpers ----
@@ -364,7 +375,7 @@ document.addEventListener('change', (e) => {
     const key = baseName(sel.dataset.guest);
     TRACKER.messages[key] = TRACKER.messages[key] || {};
     TRACKER.messages[key][sel.dataset.field] = sel.value;
-    writeTracker({ type: 'message', guestName: key, field: sel.dataset.field, value: sel.value });
+    queueWrite({ type: 'message', guestName: key, field: sel.dataset.field, value: sel.value });
     renderAll();
   }
 });
