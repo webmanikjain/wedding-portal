@@ -17,6 +17,15 @@
   .day-section.day-hidden { display:none; }
   .day-header { font-size:1.05rem; font-weight:700; color:var(--navy); border-bottom:3px solid var(--gold); padding-bottom:8px; margin:20px 0 14px; }
   .own-section-header { font-size:0.92rem; font-weight:700; color:var(--amber); border-bottom:2px solid #fff3cd; padding-bottom:6px; margin:24px 0 12px; }
+  .live-status-badge span { display:inline-block; margin-top:3px; font-size:0.7rem; padding:2px 6px; border-radius:6px; font-weight:600; }
+  .live-scheduled { background:#e9ecef; color:#495057; }
+  .live-active { background:#d6e9f8; color:#1c5a85; }
+  .live-landed { background:#d4edda; color:#1a5c2a; }
+  .live-delayed { background:#fff3cd; color:#8a6d1f; }
+  .live-cancelled { background:#f8d7da; color:#842029; }
+  .live-unknown { background:#eee; color:#999; }
+  #refreshStatusBtn { background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:inherit; }
+  #refreshStatusBtn:disabled { opacity:0.6; cursor:default; }
   .van-card { background:white; border:1px solid #d9d4c8; border-left:4px solid var(--green); border-radius:8px; margin-bottom:14px; overflow:hidden; }
   .van-card.own-arrangement { border-left:4px solid var(--amber); }
   .van-header { background:#eef2e9; padding:8px 14px; display:flex; justify-content:space-between; align-items:center; font-weight:700; color:var(--navy); font-size:0.85rem; }
@@ -32,6 +41,9 @@
   .tag-badge { font-size:0.62rem; background:#eaf1fb; color:#1c4a75; padding:1px 5px; border-radius:7px; margin-left:5px; }
   .seat-badge { font-size:0.7rem; background:#fdecea; color:#a12622; padding:2px 6px; border-radius:7px; font-weight:600; }
   .wa-icon { text-decoration:none; font-size:1.05rem; display:inline-block; background:#25D366; border-radius:50%; width:26px; height:26px; line-height:26px; text-align:center; }
+  .flight-link { color:var(--navy); text-decoration:none; border-bottom:1px dotted var(--navy); font-weight:600; }
+  .checkin-combo { display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .checkin-date { font-size:0.76rem; }
   .hotel-link { color:#1a5c2a; text-decoration:none; font-weight:600; }
   .muted { color:#999; }
   .center { text-align:center; }
@@ -40,8 +52,8 @@
   .statusSelect { font-size:0.74rem; padding:3px 5px; border-radius:5px; border:1px solid #ccc; }
   .statusSelect.yes { background:#d4edda; color:#1a5c2a; font-weight:600; }
   .statusSelect.oksend { background:#d6e9f8; color:#1c5a85; font-weight:600; }
-  .statusSelect.nopickup { background:#fff3cd; color:#8a6d1f; font-weight:600; }
   .statusSelect.err { background:#f8d7da; color:#842029; font-weight:600; }
+  .blocked-badge { display:inline-block; background:#842029; color:white; font-weight:800; font-size:0.75rem; padding:5px 10px; border-radius:6px; letter-spacing:0.3px; cursor:help; }
   .send-btn-mini { font-size:0.72rem; padding:4px 8px; border-radius:5px; border:1px solid var(--green); background:white; color:var(--green); cursor:pointer; font-weight:600; white-space:nowrap; }
   .waiting-badge { font-size:0.72rem; background:#f0f0f0; color:#888; padding:3px 8px; border-radius:6px; white-space:nowrap; }
   .scroll-hint { font-size:0.7rem; color:#999; text-align:center; padding:4px; display:none; }
@@ -55,6 +67,7 @@
   <div class="top-actions"><a href="index.html">← Planner Portal</a></div>
   <nav class="daynav" id="dayNav"></nav>
   <div class="top-actions"><a href="#own-arrangements-section" id="jumpOwnBtn">🚗 No Pickup Guests List</a></div>
+  <div class="top-actions"><button id="refreshStatusBtn" onclick="refreshLiveStatus()">🔄 Refresh Flight Status</button></div>
 </header>
 <main id="main"><div class="loading">Loading arrivals and live status…</div></main>
 
@@ -64,6 +77,90 @@ const EXPORT = {"arrivals": [{"listNum": "1", "name": "Archana Gupta", "airline"
 
 // ---- Backend (same Netlify Functions as index.html / summary.html) ----
 let TRACKER = { messages: {}, transportReceived: {}, roomCheckedIn: {} };
+
+// Live flight status (not persisted to the backend - refreshed on demand from
+// the flight-status function, in-memory only for this page load)
+const LIVE_STATUS = {}; // key: "flightNo|date" -> { status, source, ... }
+function agoText(fetchedAt) {
+  if (!fetchedAt) return 'Unknown';
+  const mins = Math.round((Date.now() - fetchedAt) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins === 1) return '1 min ago';
+  if (mins < 60) return `${mins} mins ago`;
+  const hrs = Math.round(mins / 60);
+  return hrs === 1 ? '1 hour ago' : `${hrs} hours ago`;
+}
+function liveStatusLabel(s) {
+  const map = {
+    scheduled: { text: 'Scheduled', cls: 'live-scheduled' },
+    active: { text: '✈ In Air', cls: 'live-active' },
+    landed: { text: '✅ Landed', cls: 'live-landed' },
+    delayed: { text: '⏱ Delayed', cls: 'live-delayed' },
+    cancelled: { text: '❌ Cancelled', cls: 'live-cancelled' },
+    unknown: { text: '? Unknown', cls: 'live-unknown' },
+  };
+  const m = map[s.status] || map.unknown;
+  return `<span class="${m.cls}" title="Last updated ${agoText(s.fetchedAt)}">${m.text}</span>`;
+}
+// Bangkok is always UTC+7, no daylight saving - safe to hardcode the offset
+// rather than rely on the viewer's own browser timezone.
+function nowBangkok() {
+  const utcMs = Date.now() + (new Date().getTimezoneOffset() * 60000);
+  return new Date(utcMs + 7 * 60 * 60000);
+}
+function flightDateTime(dateStr, timeStr) {
+  // dateStr like "30 Aug 2026", timeStr like "11:25" - both already Bangkok
+  // local time in the source data, so no further offset needed here.
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  if (timeStr) {
+    const [h, m] = timeStr.split(':').map(Number);
+    d.setHours(h || 0, m || 0, 0, 0);
+  }
+  return d;
+}
+
+async function refreshLiveStatus() {
+  const btn = document.getElementById('refreshStatusBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '🔄 Refreshing…'; }
+  // Only check flights arriving in the next 8 hours (Bangkok time) - that's
+  // the only window where live status is meaningfully accurate, and it keeps
+  // API usage modest. Flights outside this window keep whatever status was
+  // last fetched for them, if any.
+  const now = nowBangkok();
+  const windowEnd = new Date(now.getTime() + 8 * 60 * 60000);
+  const uniqueFlights = new Set();
+  EXPORT.arrivals.forEach(f => {
+    if (!f.flightNo || !f.date) return;
+    const dt = flightDateTime(f.date, f.time);
+    if (!dt || dt < now || dt > windowEnd) return;
+    const isoDate = new Date(f.date).toISOString().slice(0, 10);
+    uniqueFlights.add(`${f.flightNo}|${isoDate}|${f.date}`);
+  });
+  if (uniqueFlights.size === 0) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Flight Status'; }
+    alert('No flights arriving in the next 8 hours (Bangkok time) right now - nothing to refresh.');
+    return;
+  }
+  let done = 0;
+  for (const key of uniqueFlights) {
+    const [flightNo, isoDate, origDate] = key.split('|');
+    try {
+      const res = await fetch(`/.netlify/functions/flight-status?flightNo=${encodeURIComponent(flightNo)}&date=${isoDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        data.fetchedAt = Date.now();
+        LIVE_STATUS[`${flightNo}|${origDate}`] = data;
+      }
+    } catch (e) { console.warn('flight-status lookup failed for', flightNo, e); }
+    done++;
+    if (btn) btn.textContent = `🔄 Refreshing… (${done}/${uniqueFlights.size})`;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Flight Status'; }
+  renderAll();
+}
+
 async function loadStatus() {
   try {
     const res = await fetch('/.netlify/functions/get-tracker', { cache: 'no-store' });
@@ -208,6 +305,36 @@ function buildDaySlots() {
   return byDate;
 }
 
+// FlightAware's public /live/flight/ URLs are indexed by ICAO airline code
+// (e.g. "THA314"), not the IATA code shown on tickets (e.g. "TG314") - a
+// direct IATA-style link 404s for most airlines. Mapping covers every
+// airline appearing in this event's flight data.
+const IATA_TO_ICAO = {
+  AI: 'AIC', OS: 'AUA', PG: 'BKP', B3: 'BTN', CX: 'CPA', '5J': 'CEB',
+  DL: 'DAL', BR: 'EVA', EK: 'UAE', EY: 'ETD', '6E': 'IGO', JL: 'JAL',
+  KE: 'KAL', QR: 'QTR', TR: 'TGW', SQ: 'SIA', '9C': 'CQH', LX: 'SWR',
+  TG: 'THA', SL: 'TLM', VZ: 'TVJ', TK: 'THY', UA: 'UAL', ZG: 'TZP',
+};
+function flightAwareLink(flightNo, dateStr, timeStr) {
+  if (!flightNo) return null;
+  const m = flightNo.match(/^([A-Z0-9]{2})(\d+)$/);
+  const icao = m ? IATA_TO_ICAO[m[1]] : null;
+  const ident = (m && icao) ? `${icao}${m[2]}` : flightNo; // fall back to raw code if airline isn't mapped
+
+  // Completed flights: /history listing is reliable, shows every past
+  // occurrence for the guest to pick their actual date from.
+  // Upcoming flights: rather than a direct /live/ link (which can still be
+  // ambiguous - codeshares, near-duplicate idents), send to FlightAware's
+  // blank search page and copy the flight number to the clipboard so the
+  // planner just pastes it in themselves. No guessing, no wrong-flight risk.
+  const scheduled = flightDateTime(dateStr, timeStr);
+  const isUpcoming = scheduled && scheduled >= nowBangkok();
+  if (isUpcoming) {
+    return { copyOnly: true, ident };
+  }
+  return { copyOnly: false, url: `https://flightaware.com/live/flight/${encodeURIComponent(ident)}/history` };
+}
+
 function renderPassengerRow(rawName) {
   const name = baseName(rawName); // strip "(Infant)"/"(Staff)" annotations before any lookup
   const leg = EXPORT.arrivals.find(f => f.name === name);
@@ -241,18 +368,17 @@ function renderPassengerRow(rawName) {
 
   let prearrivalCell;
   if (pStatus === 'error') {
-    prearrivalCell = `<td class="prearrival-cell"><span class="statusSelect err">⚠ Blocked</span></td>`;
+    prearrivalCell = `<td class="prearrival-cell"><span class="blocked-badge" title="Marked Error wait - resolve before sending">🚫 BLOCKED</span></td>`;
   } else if (tooEarly && pStatus !== 'sent') {
     prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${daysOut-2}d</span></td>`;
   } else {
-    const selCls = pStatus === 'sent' ? 'yes' : pStatus === 'no_pickup' ? 'nopickup' : 'oksend';
+    const selCls = pStatus === 'sent' ? 'yes' : 'oksend';
     const btnLabel = pStatus === 'sent' ? 'Re-send' : 'Send';
     prearrivalCell = `<td class="prearrival-cell">
       <select class="statusSelect ${selCls}" data-guest="${name.replace(/"/g,'&quot;')}" data-field="preArrivalWelcomeSent">
-        <option value="Ok to send" ${pStatus==='not_sent'?'selected':''}>Ok to send</option>
+        <option value="Ok to send" ${pStatus!=='sent'?'selected':''}>Ok to send</option>
         <option value="Yes-Sent" ${pStatus==='sent'?'selected':''}>Yes-Sent</option>
         <option value="Error wait">Error wait</option>
-        <option value="No Pickup" ${pStatus==='no_pickup'?'selected':''}>No Pickup</option>
       </select>
       ${waLink ? `<button class="send-btn-mini pre-arrival-send" data-wa="${waLink}" data-guest="${name.replace(/"/g,'&quot;')}">${btnLabel}</button>` : ''}
     </td>`;
@@ -263,28 +389,39 @@ function renderPassengerRow(rawName) {
   const rowClass = checkedIn ? 'row-checkedin' : (arrived ? 'row-arrived' : '');
   const hotelCell = roomListNum === undefined ? '<span class="muted">N/A (staff)</span>'
     : (room.confirmation ? `<a href="${hotelLink}" target="_blank" class="hotel-link">🏨 ${room.confirmation}</a>` : '<span class="muted">TBC</span>');
-  const checkinDateCell = roomListNum === undefined ? '<span class="muted">—</span>' : (EXPORT.rooms[String(roomListNum)] && EXPORT.rooms[String(roomListNum)].checkIn ? EXPORT.rooms[String(roomListNum)].checkIn : '<span class="muted">TBC</span>');
-  const checkedInCell = roomListNum === undefined ? '<span class="muted">—</span>'
-    : `<input type="checkbox" class="checkedin-check" data-room="${roomListNum}" ${checkedIn ? 'checked' : ''}>`;
+  const checkinDateVal = roomListNum === undefined ? null : (EXPORT.rooms[String(roomListNum)] && EXPORT.rooms[String(roomListNum)].checkIn);
+  const confirmCheckinCell = roomListNum === undefined ? '<span class="muted">—</span>'
+    : `<span class="checkin-combo"><span class="checkin-date">${checkinDateVal || 'TBC'}</span><input type="checkbox" class="checkedin-check" data-room="${roomListNum}" ${checkedIn ? 'checked' : ''}></span>`;
   const flightArrivalCell = leg && leg.date ? `${leg.date.split(' ').slice(0,2).join('-')}: ${leg.time || 'TBC'}` : 'TBC';
+  const flightKey = leg ? `${leg.flightNo}|${leg.date}` : null;
+  const liveStatus = flightKey ? LIVE_STATUS[flightKey] : null;
+  const liveStatusBadge = leg && !noPickup
+    ? `<span class="live-status-badge" data-flightno="${leg.flightNo || ''}" data-date="${leg.date ? new Date(leg.date).toISOString().slice(0,10) : ''}">${liveStatus ? liveStatusLabel(liveStatus) : ''}</span>`
+    : '';
 
   return `<tr class="${rowClass}">
     ${prearrivalCell}
     <td class="name-cell">${nameCell}${kidBadge}</td>
     <td>${seatBadge}</td>
     <td class="center">${contactCell}</td>
-    <td title="${tooltip}">${leg ? (leg.flightNo || '') : (noPickup ? 'Own arrangements' : 'TBC')}</td>
+    <td title="${tooltip}">${(() => {
+      if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
+      const fa = flightAwareLink(leg.flightNo, leg.date, leg.time);
+      if (fa.copyOnly) {
+        return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copies ${fa.ident} to clipboard, then opens FlightAware search">${leg.flightNo} 📋</a>`;
+      }
+      return `<a href="${fa.url}" target="_blank" class="flight-link">${leg.flightNo}</a>`;
+    })()}</td>
     <td title="${tooltip}">${leg ? `${originCode} → ${destCode}` : ''}</td>
-    <td>${flightArrivalCell}</td>
+    <td>${flightArrivalCell}${liveStatusBadge}</td>
     ${arrivedCell}
     <td>${hotelCell}</td>
-    <td>${checkinDateCell}</td>
-    <td class="center">${checkedInCell}</td>
+    <td>${confirmCheckinCell}</td>
   </tr>`;
 }
 
 function tableHead() {
-  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Seat</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Hotel Check In</th><th>Confirm Check In</th></tr></thead>`;
+  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Seat</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Confirm Hotel Check-In</th></tr></thead>`;
 }
 
 function renderSlot(slot) {
@@ -381,10 +518,24 @@ document.addEventListener('change', (e) => {
 });
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.pre-arrival-send');
-  if (!btn) return;
-  window.open(btn.dataset.wa, '_blank');
-  markSent(btn.dataset.guest, 'preArrivalWelcomeSent');
-  renderAll();
+  if (btn) {
+    window.open(btn.dataset.wa, '_blank');
+    markSent(btn.dataset.guest, 'preArrivalWelcomeSent');
+    renderAll();
+    return;
+  }
+  const copyLink = e.target.closest('.flight-link-copy');
+  if (copyLink) {
+    const ident = copyLink.dataset.flightno;
+    if (navigator.clipboard && ident) {
+      navigator.clipboard.writeText(ident).then(() => {
+        const original = copyLink.textContent;
+        copyLink.textContent = `✅ Copied "${ident}"`;
+        setTimeout(() => { copyLink.textContent = original; }, 2000);
+      }).catch(() => {});
+    }
+    // Link still navigates to the blank FlightAware search page via its href/target
+  }
 });
 
 init();
