@@ -16,6 +16,15 @@ function getTrackerStore() {
 // field is currently blank or the generic 'Ok to send' default - never
 // touches anything already marked Yes-Sent or Error, so real planner
 // progress is never overwritten.
+//
+// Pre-Arrival Welcome deliberately has NO 'No Pickup' backfill: unlike
+// Flight Confirmation, a no-pickup guest still needs a real Pre-Arrival
+// message (the 5b safe-travels variant) - it's not a message to skip, just
+// one gated by the same 2-day time window as everyone else. An earlier
+// version of this backfill ran on every load and treated 'Ok to send' as
+// still-blank, which meant any manual change away from 'No Pickup' got
+// silently reverted on the next page load. migrateAwayFromNoPickupPreArrival
+// below cleans up any guests still stuck with that stale value.
 function backfillPickupDropoff(data) {
   let changed = false;
   for (const name of Object.keys(data.messages)) {
@@ -24,11 +33,23 @@ function backfillPickupDropoff(data) {
     if (NO_PICKUP_SET.has(name) && isBlankish(m.flightConfirmationSent)) {
       m.flightConfirmationSent = 'No Pickup'; changed = true;
     }
-    if (NO_PICKUP_SET.has(name) && isBlankish(m.preArrivalWelcomeSent)) {
-      m.preArrivalWelcomeSent = 'No Pickup'; changed = true;
-    }
     if (NO_DROPOFF_SET.has(name) && isBlankish(m.preDepartureReminderSent)) {
       m.preDepartureReminderSent = 'No Dropoff'; changed = true;
+    }
+  }
+  return changed;
+}
+
+// One-time cleanup: any guest whose Pre-Arrival Welcome is still stuck on
+// the old 'No Pickup' value (from before this fix) gets moved to 'Ok to
+// send' so they fall into the normal time-gated flow like everyone else.
+function migrateAwayFromNoPickupPreArrival(data) {
+  let changed = false;
+  for (const name of Object.keys(data.messages)) {
+    const m = data.messages[name];
+    if ((m.preArrivalWelcomeSent || '').toLowerCase() === 'no pickup') {
+      m.preArrivalWelcomeSent = 'Ok to send';
+      changed = true;
     }
   }
   return changed;
@@ -42,10 +63,12 @@ exports.handler = async () => {
       // First run - seed from the uploaded Google Tracker export
       data = seed;
       backfillPickupDropoff(data);
+      migrateAwayFromNoPickupPreArrival(data);
       await store.setJSON('state-v2', data);
-    } else if (backfillPickupDropoff(data)) {
-      // Existing data - backfill only blank/generic fields, save if anything changed
-      await store.setJSON('state-v2', data);
+    } else {
+      const a = backfillPickupDropoff(data);
+      const b = migrateAwayFromNoPickupPreArrival(data);
+      if (a || b) await store.setJSON('state-v2', data);
     }
     return {
       statusCode: 200,
