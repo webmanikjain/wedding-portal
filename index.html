@@ -716,7 +716,7 @@ function renderCardInner(listNum, focusName) {
   const gateDateStr = arrLeg && arrLeg.date ? arrLeg.date : room.checkIn;
   const gateTimeStr = arrLeg && arrLeg.date && arrLeg.time ? arrLeg.time : '12:00';
   const hoursOutPW = hoursUntil(gateDateStr, gateTimeStr);
-  const tooEarly = hoursOutPW !== null && hoursOutPW > 60;
+  const tooEarly = hoursOutPW !== null && hoursOutPW > 72;
   const isDomesticArrival = arrLeg && arrLeg.origin && arrLeg.origin.includes('Phuket');
   const preArrivalWelcomeRow = `<div class="send-row" id="action-prearrival">
       ${(() => {
@@ -735,7 +735,7 @@ function renderCardInner(listNum, focusName) {
         if (status === 'no_pickup') return '<span class="check" style="color:var(--muted);">No Pickup (safe-travels version)</span>';
         if (status === 'sent') return '<span class="check" style="color:var(--green);font-weight:600;">✓ Sent</span>';
         if (status === 'error') return '<span class="check" style="color:#a33;font-weight:600;">⚠ Check status</span>';
-        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${formatTimeRemaining(hoursOutPW - 60)}</span>`;
+        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${formatTimeRemaining(hoursOutPW - 72)}</span>`;
         return '<span class="check" style="color:var(--muted);">Not marked sent yet</span>';
       })()}
     </div>`;
@@ -831,7 +831,7 @@ function renderCardInner(listNum, focusName) {
   // Pre-Arrival Welcome as the first real actionable item.
   if (pStatus === 'error') nextAction = { text: 'Pre-Arrival Welcome is blocked — check status', icon: '⚠', color: '#a33', target: 'action-prearrival' };
   else if (!tooEarly && pStatus !== 'sent') nextAction = { text: 'Send Pre-Arrival Welcome Message', icon: '📤', color: '#8a6d1f', target: 'action-prearrival' };
-  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${formatTimeRemaining(hoursOutPW - 60)}`, icon: '⏳', color: '#888', target: null };
+  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${formatTimeRemaining(hoursOutPW - 72)}`, icon: '⏳', color: '#888', target: null };
   else if (!noPickup && arrLeg && !transportReceivedStatus(repName)) nextAction = { text: 'Mark Transport Received once picked up', icon: '🚐', color: '#8a6d1f', target: 'action-received' };
   else if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin' };
   else if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };

@@ -428,7 +428,7 @@ function renderPassengerRow(rawName) {
 
   const gateTimeStr = leg && leg.date && leg.time ? leg.time : '12:00';
   const hoursOutPW = leg ? hoursUntil(leg.date, gateTimeStr) : (room.checkIn ? hoursUntil(room.checkIn, '12:00') : null);
-  const tooEarly = hoursOutPW !== null && hoursOutPW > 60;
+  const tooEarly = hoursOutPW !== null && hoursOutPW > 72;
   const pStatus = preArrivalWelcomeStatus(name);
   const authMsg = EXPORT.wa_prearrival_welcome_msg[name];
   const authPhone = EXPORT.wa_prearrival_welcome_phone[name];
@@ -447,7 +447,7 @@ function renderPassengerRow(rawName) {
       <span class="blocked-badge" title="Marked Error wait - change the dropdown to un-block">🚫 BLOCKED</span>
     </td>`;
   } else if (tooEarly && pStatus !== 'sent') {
-    prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${formatTimeRemaining(hoursOutPW - 60)}</span></td>`;
+    prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${formatTimeRemaining(hoursOutPW - 72)}</span></td>`;
   } else {
     const selCls = pStatus === 'sent' ? 'yes' : 'oksend';
     const btnLabel = (pStatus === 'sent' ? 'Re-send' : 'Send') + (isDomesticArrival ? ' (Domestic)' : '');
