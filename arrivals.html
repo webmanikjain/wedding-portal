@@ -22,12 +22,11 @@
   .day-header { font-size:1.05rem; font-weight:700; color:var(--navy); border-bottom:3px solid var(--gold); padding-bottom:8px; margin:20px 0 14px; position:sticky; top:var(--header-h, 220px); z-index:5; background:var(--paper); padding-top:6px; }
   .own-section-header { font-size:0.92rem; font-weight:700; color:var(--amber); border-bottom:2px solid #fff3cd; padding-bottom:6px; margin:24px 0 12px; }
   .live-status-badge span { display:inline-block; margin-top:3px; font-size:0.7rem; padding:2px 6px; border-radius:6px; font-weight:600; }
-  .live-scheduled { background:#e9ecef; color:#495057; }
   .live-active { background:#d6e9f8; color:#1c5a85; }
   .live-landed { background:#d4edda; color:#1a5c2a; }
+  .live-landed-delayed { background:#ffe0b2; color:#8a4b00; }
   .live-delayed { background:#fff3cd; color:#8a6d1f; }
   .live-cancelled { background:#f8d7da; color:#842029; }
-  .live-unknown { background:#eee; color:#999; }
   #refreshStatusBtn:disabled { opacity:0.6; cursor:default; }
   .van-card { background:white; border:1px solid #d9d4c8; border-left:4px solid var(--green); border-radius:8px; margin-bottom:14px; overflow:hidden; }
   .van-card.own-arrangement { border-left:4px solid var(--amber); }
@@ -112,14 +111,16 @@ function agoText(fetchedAt) {
 }
 function liveStatusLabel(s) {
   const map = {
-    scheduled: { text: 'Scheduled', cls: 'live-scheduled' },
-    active: { text: '✈ In Air', cls: 'live-active' },
-    landed: { text: '✅ Landed', cls: 'live-landed' },
-    delayed: { text: '⏱ Delayed', cls: 'live-delayed' },
+    // scheduled shows nothing - on track is the default, no news is good news
+    active: { text: '✈ In Air, On Time', cls: 'live-active' },
+    arrival_delayed: { text: '⚠️ Arrival Delayed', cls: 'live-delayed' },
+    departure_delayed: { text: '⏱ Departure Delayed', cls: 'live-delayed' },
+    landed_on_time: { text: '✅ Landed, On Time', cls: 'live-landed' },
+    landed_delayed: { text: '✔ Landed, Delayed', cls: 'live-landed-delayed' },
     cancelled: { text: '❌ Cancelled', cls: 'live-cancelled' },
-    unknown: { text: '❓ No live data', cls: 'live-unknown' },
   };
-  const m = map[s.status] || map.unknown;
+  const m = map[s.status];
+  if (!m) return ''; // scheduled, or an unrecognized status - show nothing rather than a "no data" badge
   const detail = s.error ? ` — ${s.error}` : '';
   return `<span class="${m.cls}" title="Last updated ${agoText(s.fetchedAt)}${detail}">${m.text}</span>`;
 }
@@ -131,15 +132,27 @@ function nowBangkok() {
 }
 function flightDateTime(dateStr, timeStr) {
   // dateStr like "30 Aug 2026", timeStr like "11:25" - both already Bangkok
-  // local time in the source data, so no further offset needed here.
+  // local wall-clock time in the source data. Critically, we build the UTC
+  // instant explicitly assuming UTC+7, rather than letting the browser's
+  // OWN local timezone interpret the string - "new Date(dateStr)" silently
+  // uses the viewer's local timezone for non-ISO strings like this, which
+  // can shift a flight onto the wrong calendar day entirely for anyone
+  // testing from outside Thailand (exactly the bug that caused a flight
+  // arriving "today in Bangkok" to be silently skipped by the day filter).
   if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d)) return null;
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const parts = dateStr.trim().split(/\s+/);
+  if (parts.length < 3) return null;
+  const day = parseInt(parts[0], 10);
+  const month = months[parts[1]];
+  const year = parseInt(parts[2], 10);
+  if (isNaN(day) || month === undefined || isNaN(year)) return null;
+  let h = 0, m = 0;
   if (timeStr) {
-    const [h, m] = timeStr.split(':').map(Number);
-    d.setHours(h || 0, m || 0, 0, 0);
+    const t = timeStr.split(':').map(Number);
+    h = t[0] || 0; m = t[1] || 0;
   }
-  return d;
+  return new Date(Date.UTC(year, month, day, h - 7, m));
 }
 
 function cssEscape(s) { return (s || '').replace(/["\\]/g, '\\$&'); }
@@ -157,27 +170,35 @@ function updateHeaderHeightVar() {
 }
 window.addEventListener('resize', updateHeaderHeightVar);
 
+// Parses "25 Aug 2026" directly into "2026-08-25" without ever routing
+// through a Date object's local getters - sidesteps the timezone bug
+// entirely, since this never asks the browser to interpret/re-extract
+// anything in its own local time.
+function bangkokDateKey(dateStr) {
+  const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+  const parts = (dateStr || '').trim().split(/\s+/);
+  if (parts.length < 3 || !months[parts[1]]) return null;
+  return `${parts[2]}-${months[parts[1]]}-${String(parseInt(parts[0],10)).padStart(2,'0')}`;
+}
+
 async function refreshLiveStatus() {
   const btn = document.getElementById('refreshStatusBtn');
   if (btn) { btn.disabled = true; btn.textContent = '🔄 Refreshing…'; }
-  // Check flights from 4 hours ago (recently landed) through 8 hours ahead
-  // (Bangkok time) - that's the window where live status is meaningfully
-  // accurate, and it keeps API usage modest. Flights outside this window
-  // keep whatever status was last fetched for them, if any.
+  // Check every flight scheduled for TODAY (Bangkok calendar date) - simpler
+  // to reason about than a rolling hour-window, and means testing/checking
+  // status doesn't depend on exactly what time you happen to click Refresh.
   const now = nowBangkok();
-  const windowStart = new Date(now.getTime() - 4 * 60 * 60000);
-  const windowEnd = new Date(now.getTime() + 8 * 60 * 60000);
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const uniqueFlights = new Set();
   EXPORT.arrivals.forEach(f => {
     if (!f.flightNo || !f.date) return;
-    const dt = flightDateTime(f.date, f.time);
-    if (!dt || dt < windowStart || dt > windowEnd) return;
-    const isoDate = new Date(f.date).toISOString().slice(0, 10);
+    const isoDate = bangkokDateKey(f.date);
+    if (!isoDate || isoDate !== todayStr) return;
     uniqueFlights.add(`${f.flightNo}|${isoDate}|${f.date}`);
   });
   if (uniqueFlights.size === 0) {
     if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Flight Status'; }
-    alert('No flights arriving within the last 4 hours or next 8 hours (Bangkok time) right now - nothing to refresh.');
+    alert('No flights arriving today (Bangkok time) - nothing to refresh.');
     return;
   }
   let done = 0;
