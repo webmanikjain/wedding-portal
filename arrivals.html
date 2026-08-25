@@ -10,8 +10,9 @@
   header .sub { font-size:0.76rem; color:#cfd8e6; }
   .top-actions { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
   .top-actions a, .top-actions button { color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:6px; text-decoration:none; font-size:0.78rem; font-weight:600; font-family:inherit; cursor:pointer; }
-  .search-row { margin-top:10px; display:flex; gap:8px; }
-  .search-row input { flex:1; padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.3); font-size:0.85rem; }
+  .search-row { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .search-row input { flex:2; min-width:150px; padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.3); font-size:0.85rem; }
+  .search-row select { padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.3); background:white; font-size:0.85rem; font-family:inherit; cursor:pointer; }
   .search-row button { background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:8px 12px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; }
   nav.daynav { margin-top:10px; }
   nav.daynav select { width:100%; max-width:280px; padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15); color:white; font-size:0.85rem; font-family:inherit; cursor:pointer; }
@@ -81,6 +82,12 @@
   </div>
   <div class="search-row">
     <input type="text" id="guestSearch" placeholder="🔍 Search guest name…" autocomplete="off">
+    <select id="statusFilter">
+      <option value="">All statuses</option>
+      <option value="not_sent">Ok to send</option>
+      <option value="sent">Yes-Sent</option>
+      <option value="error">Error wait</option>
+    </select>
     <button id="clearSearchBtn" onclick="clearGuestSearch()" style="display:none;">✕ Show All</button>
   </div>
   <div class="scroll-hint">👉 swipe tables sideways to see all columns</div>
@@ -178,7 +185,7 @@ async function refreshLiveStatus() {
   for (const key of uniqueFlights) {
     const [flightNo, isoDate, origDate] = key.split('|');
     try {
-      const res = await fetch(`/.netlify/functions/flight-status?flightNo=${encodeURIComponent(flightNo)}&date=${isoDate}`);
+      const res = await fetch(`/.netlify/functions/flight-status?flightNo=${encodeURIComponent(toIcaoIdent(flightNo))}&date=${isoDate}`);
       if (res.ok) {
         const data = await res.json();
         data.fetchedAt = Date.now();
@@ -364,11 +371,19 @@ const IATA_TO_ICAO = {
   KE: 'KAL', QR: 'QTR', TR: 'TGW', SQ: 'SIA', '9C': 'CQH', LX: 'SWR',
   TG: 'THA', SL: 'TLM', VZ: 'TVJ', TK: 'THY', UA: 'UAL', ZG: 'TZP',
 };
-function flightAwareLink(flightNo, dateStr, timeStr) {
-  if (!flightNo) return null;
+// FlightAware's API (not just its public website) expects the ICAO-style
+// ident (e.g. "THA314"), not the IATA code printed on tickets (e.g.
+// "TG314") - confirmed directly: querying with the raw ticket number fails
+// to match, while the converted ident succeeds.
+function toIcaoIdent(flightNo) {
+  if (!flightNo) return flightNo;
   const m = flightNo.match(/^([A-Z0-9]{2})(\d+)$/);
   const icao = m ? IATA_TO_ICAO[m[1]] : null;
-  const ident = (m && icao) ? `${icao}${m[2]}` : flightNo; // fall back to raw code if airline isn't mapped
+  return (m && icao) ? `${icao}${m[2]}` : flightNo; // fall back to raw code if airline isn't mapped
+}
+function flightAwareLink(flightNo, dateStr, timeStr) {
+  if (!flightNo) return null;
+  const ident = toIcaoIdent(flightNo);
 
   // Completed flights: /history listing is reliable, shows every past
   // occurrence for the guest to pick their actual date from.
@@ -419,7 +434,14 @@ function renderPassengerRow(rawName) {
 
   let prearrivalCell;
   if (pStatus === 'error') {
-    prearrivalCell = `<td class="prearrival-cell"><span class="blocked-badge" title="Marked Error wait - resolve before sending">🚫 BLOCKED</span></td>`;
+    prearrivalCell = `<td class="prearrival-cell">
+      <select class="statusSelect err" data-guest="${name.replace(/"/g,'&quot;')}" data-field="preArrivalWelcomeSent">
+        <option value="Ok to send">Ok to send</option>
+        <option value="Yes-Sent">Yes-Sent</option>
+        <option value="Error wait" selected>Error wait</option>
+      </select>
+      <span class="blocked-badge" title="Marked Error wait - change the dropdown to un-block">🚫 BLOCKED</span>
+    </td>`;
   } else if (tooEarly && pStatus !== 'sent') {
     prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${formatTimeRemaining(hoursOutPW - 60)}</span></td>`;
   } else {
@@ -450,7 +472,7 @@ function renderPassengerRow(rawName) {
     ? `<span class="live-status-badge" data-flightno="${leg.flightNo || ''}" data-date="${leg.date ? new Date(leg.date).toISOString().slice(0,10) : ''}">${liveStatus ? liveStatusLabel(liveStatus) : ''}</span>`
     : '';
 
-  return `<tr class="${rowClass}" data-search="${name.toLowerCase()}">
+  return `<tr class="${rowClass}" data-search="${name.toLowerCase()}" data-status="${pStatus}">
     ${prearrivalCell}
     <td class="name-cell" title="List #${roomListNum !== undefined ? roomListNum : '—'}${room.room ? ', Room ' + room.room : ''}">${nameCell}${kidBadge}${seatBadge}</td>
     <td class="center">${contactCell}</td>
@@ -458,7 +480,7 @@ function renderPassengerRow(rawName) {
       if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
       const fa = flightAwareLink(leg.flightNo, leg.date, leg.time);
       if (fa.copyOnly) {
-        return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copy flight number to check status on FlightAware">${leg.flightNo} 📋</a>`;
+        return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copy flight number to check status on FlightAware">${leg.flightNo}</a>`;
       }
       return `<a href="${fa.url}" target="_blank" class="flight-link" title="Check flight status history">${leg.flightNo}</a>`;
     })()}</td>
@@ -500,8 +522,9 @@ function renderSlot(slot) {
   const key = slotKey(slot);
   const complete = isSlotComplete(slot);
   const searchBox = document.getElementById('guestSearch');
-  const searchActive = searchBox && searchBox.value.trim().length > 0;
-  const collapsed = complete && !MANUALLY_EXPANDED.has(key) && !searchActive;
+  const statusBox = document.getElementById('statusFilter');
+  const filterActive = (searchBox && searchBox.value.trim().length > 0) || (statusBox && statusBox.value);
+  const collapsed = complete && !MANUALLY_EXPANDED.has(key) && !filterActive;
   const firstLeg = EXPORT.arrivals.find(f => f.name === baseName(slot.names[0]));
   const isDomestic = firstLeg && firstLeg.origin && firstLeg.origin.includes('Phuket');
   const domesticBadge = isDomestic ? ` <span class="domestic-badge">✈ DOMESTIC</span>` : '';
@@ -566,8 +589,7 @@ function renderAll() {
     </div>` : '';
 
   main.innerHTML = dayHtml + ownHtml;
-  const searchBox = document.getElementById('guestSearch');
-  if (searchBox && searchBox.value) filterGuestSearch(searchBox.value);
+  applyFilters();
   updateHeaderHeightVar();
 }
 
@@ -636,10 +658,11 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function filterGuestSearch(term) {
+function applyFilters() {
   const clearBtn = document.getElementById('clearSearchBtn');
-  const t = term.trim().toLowerCase();
-  if (!t) {
+  const term = document.getElementById('guestSearch').value.trim().toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  if (!term && !status) {
     document.querySelectorAll('[data-search]').forEach(row => row.style.display = '');
     document.querySelectorAll('.van-card').forEach(card => card.style.display = '');
     document.querySelectorAll('.day-section').forEach(sec => sec.style.display = '');
@@ -648,7 +671,9 @@ function filterGuestSearch(term) {
   }
   clearBtn.style.display = '';
   document.querySelectorAll('[data-search]').forEach(row => {
-    row.style.display = row.dataset.search.includes(t) ? '' : 'none';
+    const nameMatch = !term || row.dataset.search.includes(term);
+    const statusMatch = !status || row.dataset.status === status;
+    row.style.display = (nameMatch && statusMatch) ? '' : 'none';
   });
   document.querySelectorAll('.van-card').forEach(card => {
     const anyVisible = Array.from(card.querySelectorAll('[data-search]')).some(row => row.style.display !== 'none');
@@ -661,9 +686,11 @@ function filterGuestSearch(term) {
 }
 function clearGuestSearch() {
   document.getElementById('guestSearch').value = '';
-  filterGuestSearch('');
+  document.getElementById('statusFilter').value = '';
+  applyFilters();
 }
-document.getElementById('guestSearch').addEventListener('input', (e) => filterGuestSearch(e.target.value));
+document.getElementById('guestSearch').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
 
 init();
 </script>
