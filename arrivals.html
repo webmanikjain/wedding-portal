@@ -8,8 +8,8 @@
   header { background:var(--navy); color:white; padding:14px 16px; position:sticky; top:0; z-index:10; }
   header h1 { margin:0 0 2px; font-size:1.1rem; }
   header .sub { font-size:0.76rem; color:#cfd8e6; }
-  .top-actions { margin-top:8px; }
-  .top-actions a { color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:6px; text-decoration:none; font-size:0.78rem; font-weight:600; }
+  .top-actions { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
+  .top-actions a, .top-actions button { color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:6px; text-decoration:none; font-size:0.78rem; font-weight:600; font-family:inherit; cursor:pointer; }
   nav.daynav { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   nav.daynav button { color:white; background:rgba(255,255,255,0.12); padding:5px 11px; border-radius:14px; border:1px solid rgba(255,255,255,0.25); cursor:pointer; font-size:0.74rem; font-family:inherit; }
   nav.daynav button.active { background:var(--gold); color:#26282b; border-color:var(--gold); }
@@ -24,7 +24,6 @@
   .live-delayed { background:#fff3cd; color:#8a6d1f; }
   .live-cancelled { background:#f8d7da; color:#842029; }
   .live-unknown { background:#eee; color:#999; }
-  #refreshStatusBtn { background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:inherit; }
   #refreshStatusBtn:disabled { opacity:0.6; cursor:default; }
   .van-card { background:white; border:1px solid #d9d4c8; border-left:4px solid var(--green); border-radius:8px; margin-bottom:14px; overflow:hidden; }
   .van-card.own-arrangement { border-left:4px solid var(--amber); }
@@ -39,6 +38,7 @@
   .name-cell { font-weight:700; }
   .name-link { color:var(--navy); text-decoration:none; border-bottom:1px dotted var(--navy); }
   .tag-badge { font-size:0.62rem; background:#eaf1fb; color:#1c4a75; padding:1px 5px; border-radius:7px; margin-left:5px; }
+  .domestic-badge { font-size:0.62rem; background:#fdecea; color:#a12622; padding:1px 5px; border-radius:7px; margin-left:5px; font-weight:600; }
   .seat-badge { font-size:0.7rem; background:#fdecea; color:#a12622; padding:2px 6px; border-radius:7px; font-weight:600; }
   .wa-icon { text-decoration:none; font-size:1.05rem; display:inline-block; background:#25D366; border-radius:50%; width:26px; height:26px; line-height:26px; text-align:center; }
   .flight-link { color:var(--navy); text-decoration:none; border-bottom:1px dotted var(--navy); font-weight:600; }
@@ -64,10 +64,13 @@
 <header>
   <h1>Arrivals Timeline</h1>
   <div class="sub">Ratnam & Rohit · Bangkok · chronological, all arrivals in real pickup/flight order</div>
-  <div class="top-actions"><a href="index.html">← Planner Portal</a></div>
   <nav class="daynav" id="dayNav"></nav>
-  <div class="top-actions"><a href="#own-arrangements-section" id="jumpOwnBtn">🚗 No Pickup Guests List</a></div>
-  <div class="top-actions"><button id="refreshStatusBtn" onclick="refreshLiveStatus()">🔄 Refresh Flight Status</button></div>
+  <div class="top-actions">
+    <a href="index.html">← Planner Portal</a>
+    <a href="#own-arrangements-section" id="jumpOwnBtn">🚗 No Pickup Guests List</a>
+    <button id="refreshStatusBtn" onclick="refreshLiveStatus()">🔄 Refresh Flight Status</button>
+  </div>
+  <div class="scroll-hint">👉 swipe tables sideways to see all columns</div>
 </header>
 <main id="main"><div class="loading">Loading arrivals and live status…</div></main>
 
@@ -246,6 +249,14 @@ function daysUntil(dStr) {
   if (!target) return null;
   return Math.ceil((target - new Date()) / (24*60*60*1000));
 }
+function hoursUntil(dateStr, timeStr) {
+  const d = parseAnyDate(dateStr);
+  if (!d || !timeStr) return null;
+  const parts = timeStr.split(':').map(Number);
+  if (parts.some(isNaN)) return null;
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parts[0], parts[1]);
+  return (target - new Date()) / (60 * 60 * 1000);
+}
 function fmtDateFull(room) { return room && room.checkIn ? room.checkIn : 'TBC'; }
 
 // Message #5a/5b fallback - mirrors MSGS.preArrivalWelcome in index.html,
@@ -344,7 +355,9 @@ function renderPassengerRow(rawName) {
   const seat = seatStatus(name);
   const contact = EXPORT.contacts[name];
   const kidBadge = tag !== 'Adult' ? `<span class="tag-badge">${tag}</span>` : '';
-  const seatBadge = seat ? `<span class="seat-badge">${seat}</span>` : '<span class="muted">—</span>';
+  const isDomesticArrival = leg && leg.origin && leg.origin.includes('Phuket');
+  const domesticBadge = isDomesticArrival ? `<span class="domestic-badge">✈ DOMESTIC</span>` : '';
+  const seatBadge = seat ? `<span class="seat-badge">${seat}</span>` : '';
   const contactCell = contact ? `<a href="https://api.whatsapp.com/send?phone=${cleanPhone(contact)}" target="_blank" class="wa-icon" title="WhatsApp ${contact}">💬</a>` : '<span class="muted">—</span>';
   const originCode = extractCode(leg ? leg.origin : '');
   const destCode = extractCode(leg ? leg.destination : '');
@@ -357,8 +370,9 @@ function renderPassengerRow(rawName) {
   const arrivedCell = noPickup ? '<td class="center"><span class="muted">N/A</span></td>'
     : `<td class="center"><input type="checkbox" class="arrived-check" data-guest="${name.replace(/"/g,'&quot;')}" ${transportReceivedStatus(name) ? 'checked' : ''}></td>`;
 
-  const daysOut = leg ? daysUntil(leg.date) : (room.checkIn ? daysUntil(room.checkIn) : null);
-  const tooEarly = daysOut !== null && daysOut > 2;
+  const gateTimeStr = leg && leg.date && leg.time ? leg.time : '12:00';
+  const hoursOutPW = leg ? hoursUntil(leg.date, gateTimeStr) : (room.checkIn ? hoursUntil(room.checkIn, '12:00') : null);
+  const tooEarly = hoursOutPW !== null && hoursOutPW > 60;
   const pStatus = preArrivalWelcomeStatus(name);
   const authMsg = EXPORT.wa_prearrival_welcome_msg[name];
   const authPhone = EXPORT.wa_prearrival_welcome_phone[name];
@@ -370,10 +384,10 @@ function renderPassengerRow(rawName) {
   if (pStatus === 'error') {
     prearrivalCell = `<td class="prearrival-cell"><span class="blocked-badge" title="Marked Error wait - resolve before sending">🚫 BLOCKED</span></td>`;
   } else if (tooEarly && pStatus !== 'sent') {
-    prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${daysOut-2}d</span></td>`;
+    prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${Math.ceil((hoursOutPW - 60) / 24)}d</span></td>`;
   } else {
     const selCls = pStatus === 'sent' ? 'yes' : 'oksend';
-    const btnLabel = pStatus === 'sent' ? 'Re-send' : 'Send';
+    const btnLabel = (pStatus === 'sent' ? 'Re-send' : 'Send') + (isDomesticArrival ? ' (Domestic)' : '');
     prearrivalCell = `<td class="prearrival-cell">
       <select class="statusSelect ${selCls}" data-guest="${name.replace(/"/g,'&quot;')}" data-field="preArrivalWelcomeSent">
         <option value="Ok to send" ${pStatus!=='sent'?'selected':''}>Ok to send</option>
@@ -401,8 +415,7 @@ function renderPassengerRow(rawName) {
 
   return `<tr class="${rowClass}">
     ${prearrivalCell}
-    <td class="name-cell">${nameCell}${kidBadge}</td>
-    <td>${seatBadge}</td>
+    <td class="name-cell">${nameCell}${kidBadge}${seatBadge}${domesticBadge}</td>
     <td class="center">${contactCell}</td>
     <td title="${tooltip}">${(() => {
       if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
@@ -421,7 +434,7 @@ function renderPassengerRow(rawName) {
 }
 
 function tableHead() {
-  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Seat</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Confirm Hotel Check-In</th></tr></thead>`;
+  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Confirm Hotel Check-In</th></tr></thead>`;
 }
 
 function renderSlot(slot) {
@@ -461,7 +474,6 @@ function renderAll() {
     return `
     <div class="day-section" data-date="${date}">
       <div class="day-header">${fmtDayHeader(date)} · ${count} arriving</div>
-      <div class="scroll-hint">👉 swipe table sideways to see all columns</div>
       ${vanSlots.map(renderSlot).join('')}
     </div>`;
   }).join('');

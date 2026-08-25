@@ -684,20 +684,24 @@ function renderCardInner(listNum, focusName) {
   const authPWPhone = DATA.wa_prearrival_welcome_phone ? DATA.wa_prearrival_welcome_phone[baseName(repName)] : null;
   const prearrivalWelcomeMsg = authPWMsg || MSGS.preArrivalWelcome(repName, room, arrLeg);
   const prearrivalWelcomeWa = waLink(authPWPhone || primaryPhone, prearrivalWelcomeMsg);
-  // Gate: stays disabled until 2 days before the guest's arrival (falls back
-  // to room check-in date if there's no flight on file, e.g. self-arranged
-  // guests). Doesn't override an already-Sent or Error status — those still
-  // display normally regardless of timing.
+  // Gate: stays disabled until 60 hours before the guest's arrival (falls
+  // back to room check-in date, assuming a 12:00 default time, if there's no
+  // flight on file - e.g. self-arranged guests). Doesn't override an
+  // already-Sent or Error status - those still display normally regardless
+  // of timing.
   const gateDateStr = arrLeg && arrLeg.date ? arrLeg.date : room.checkIn;
-  const daysOut = daysUntil(gateDateStr);
-  const tooEarly = daysOut !== null && daysOut > 2;
+  const gateTimeStr = arrLeg && arrLeg.date && arrLeg.time ? arrLeg.time : '12:00';
+  const hoursOutPW = hoursUntil(gateDateStr, gateTimeStr);
+  const tooEarly = hoursOutPW !== null && hoursOutPW > 60;
+  const isDomesticArrival = arrLeg && arrLeg.origin && arrLeg.origin.includes('Phuket');
   const preArrivalWelcomeRow = `<div class="send-row" id="action-prearrival">
       ${(() => {
         const status = preArrivalWelcomeStatus(repName);
+        const domesticSuffix = isDomesticArrival ? ' (Domestic)' : '';
         if (status === 'error') return `<button class="btn" disabled style="opacity:.5;">Blocked — check status</button>`;
-        if (status === 'sent') return prearrivalWelcomeWa ? `<button class="btn send-btn" data-wa="${prearrivalWelcomeWa}" data-track-guest="${baseName(repName)}" data-track-field="preArrivalWelcomeSent" style="background:#8d8a7f;opacity:.75;">Re-send Pre-Arrival Welcome</button>` : `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
+        if (status === 'sent') return prearrivalWelcomeWa ? `<button class="btn send-btn" data-wa="${prearrivalWelcomeWa}" data-track-guest="${baseName(repName)}" data-track-field="preArrivalWelcomeSent" style="background:#8d8a7f;opacity:.75;">Re-send Pre-Arrival Welcome${domesticSuffix}</button>` : `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
         if (tooEarly) return `<button class="btn" disabled style="opacity:.5;">Pre-Arrival Message: Wait closer to arrival</button>`;
-        return prearrivalWelcomeWa ? `<button class="btn send-btn" data-wa="${prearrivalWelcomeWa}" data-track-guest="${baseName(repName)}" data-track-field="preArrivalWelcomeSent">Send Pre-Arrival Welcome Message</button>` : `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
+        return prearrivalWelcomeWa ? `<button class="btn send-btn" data-wa="${prearrivalWelcomeWa}" data-track-guest="${baseName(repName)}" data-track-field="preArrivalWelcomeSent">Send Pre-Arrival Welcome Message${domesticSuffix}</button>` : `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
       })()}
       ${(() => {
         const status = preArrivalWelcomeStatus(repName);
@@ -707,7 +711,7 @@ function renderCardInner(listNum, focusName) {
         if (status === 'no_pickup') return '<span class="check" style="color:var(--muted);">No Pickup (safe-travels version)</span>';
         if (status === 'sent') return '<span class="check" style="color:var(--green);font-weight:600;">✓ Sent</span>';
         if (status === 'error') return '<span class="check" style="color:#a33;font-weight:600;">⚠ Check status</span>';
-        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${daysOut - 2} day${daysOut - 2 === 1 ? '' : 's'}</span>`;
+        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${(() => { const d = Math.ceil((hoursOutPW - 60) / 24); return d + (d === 1 ? ' day' : ' days'); })()}</span>`;
         return '<span class="check" style="color:var(--muted);">Not marked sent yet</span>';
       })()}
     </div>`;
@@ -803,7 +807,7 @@ function renderCardInner(listNum, focusName) {
   // Pre-Arrival Welcome as the first real actionable item.
   if (pStatus === 'error') nextAction = { text: 'Pre-Arrival Welcome is blocked — check status', icon: '⚠', color: '#a33', target: 'action-prearrival' };
   else if (!tooEarly && pStatus !== 'sent') nextAction = { text: 'Send Pre-Arrival Welcome Message', icon: '📤', color: '#8a6d1f', target: 'action-prearrival' };
-  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${daysOut - 2} day${daysOut - 2 === 1 ? '' : 's'}`, icon: '⏳', color: '#888', target: null };
+  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${(() => { const d = Math.ceil((hoursOutPW - 60) / 24); return d + (d === 1 ? ' day' : ' days'); })()}`, icon: '⏳', color: '#888', target: null };
   else if (!noPickup && arrLeg && !transportReceivedStatus(repName)) nextAction = { text: 'Mark Transport Received once picked up', icon: '🚐', color: '#8a6d1f', target: 'action-received' };
   else if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin' };
   else if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };
@@ -812,7 +816,11 @@ function renderCardInner(listNum, focusName) {
   else nextAction = { text: 'All caught up for this guest right now', icon: '✅', color: '#1a5c2a', target: null };
 
   const bannerLabel = nextAction.target ? 'NEXT ACTION' : (nextAction.icon === '✅' ? 'STATUS' : 'UPCOMING');
+  const domesticBadge = isDomesticArrival
+    ? `<div style="display:inline-block;background:#fdecea;color:#a12622;font-weight:700;font-size:11px;letter-spacing:0.3px;padding:4px 10px;border-radius:6px;margin-bottom:10px;">✈ DOMESTIC ARRIVAL</div>`
+    : '';
   const nextActionBanner = `
+    ${domesticBadge}
     <div id="next-action-banner" data-target="${nextAction.target || ''}" data-expand-hotel="${nextAction.expandHotel ? '1' : ''}"
       style="background:#fff;border:2px solid ${nextAction.color};border-radius:8px;padding:12px 14px;margin-bottom:14px;${nextAction.target ? 'cursor:pointer;' : ''}">
       <div style="font-size:11px;font-weight:800;letter-spacing:0.5px;color:${nextAction.color};margin-bottom:2px;">${bannerLabel}${nextAction.target ? ' — TAP TO GO THERE' : ''}</div>
