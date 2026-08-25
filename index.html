@@ -82,6 +82,8 @@
   .card-nav .nav-pos { font-size:0.74rem; color:var(--muted); white-space:nowrap; }
   footer.note { max-width:600px; margin:0 auto; padding:16px 16px 32px; font-size:0.78rem; color:#8a8577; }
 .hotel-collapsible.collapsed { display: none; }
+@keyframes tapConfirmPulse { 0% { transform:scale(1); box-shadow:0 0 0 0 rgba(26,92,42,0.5); } 40% { transform:scale(1.15); box-shadow:0 0 0 8px rgba(26,92,42,0); } 100% { transform:scale(1); box-shadow:0 0 0 0 rgba(26,92,42,0); } }
+.tap-confirm { animation: tapConfirmPulse 0.5s ease-out; border-radius:6px; }
 </style>
 </head>
 <body>
@@ -323,6 +325,16 @@ function hoursUntil(dateStr, timeStr) {
   const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parts[0], parts[1]);
   return (target - new Date()) / (60 * 60 * 1000);
 }
+// Shows "opens in X hours" once under a day remains, rather than always
+// rounding up to "1 day" - much clearer close to the actual gate time.
+function formatTimeRemaining(hoursRemaining) {
+  if (hoursRemaining < 24) {
+    const h = Math.max(1, Math.ceil(hoursRemaining));
+    return h === 1 ? '1 hour' : `${h} hours`;
+  }
+  const d = Math.ceil(hoursRemaining / 24);
+  return d === 1 ? '1 day' : `${d} days`;
+}
 function fmtGuestPaidDate(dStr) {
   // dStr like "27 Aug" (space-separated, from guestPaidDates) -> "Thu, 27 Aug"
   const [day, mon] = dStr.split(' ');
@@ -427,17 +439,29 @@ document.addEventListener('click', (e) => {
   }
 });
 
+function cssEscape(s) { return (s || '').replace(/["\\]/g, '\\$&'); }
+function pulseCheckbox(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.classList.add('tap-confirm');
+  setTimeout(() => el.classList.remove('tap-confirm'), 500);
+}
+
 document.addEventListener('change', (e) => {
   const cb = e.target.closest('.received-checkbox');
   if (cb) {
-    toggleTransportReceived(cb.getAttribute('data-guest'), cb.checked);
+    const guest = cb.getAttribute('data-guest');
+    toggleTransportReceived(guest, cb.checked);
     if (currentListNum != null) renderCardInner(currentListNum, currentFocusName);
+    pulseCheckbox(`.received-checkbox[data-guest="${cssEscape(guest)}"]`);
     return;
   }
   const roomCb = e.target.closest('.checkedin-checkbox');
   if (roomCb) {
-    toggleRoomCheckedIn(parseInt(roomCb.getAttribute('data-room')), roomCb.checked);
+    const room = roomCb.getAttribute('data-room');
+    toggleRoomCheckedIn(parseInt(room), roomCb.checked);
     if (currentListNum != null) renderCardInner(currentListNum, currentFocusName);
+    pulseCheckbox(`.checkedin-checkbox[data-room="${room}"]`);
   }
 });
 
@@ -711,7 +735,7 @@ function renderCardInner(listNum, focusName) {
         if (status === 'no_pickup') return '<span class="check" style="color:var(--muted);">No Pickup (safe-travels version)</span>';
         if (status === 'sent') return '<span class="check" style="color:var(--green);font-weight:600;">✓ Sent</span>';
         if (status === 'error') return '<span class="check" style="color:#a33;font-weight:600;">⚠ Check status</span>';
-        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${(() => { const d = Math.ceil((hoursOutPW - 60) / 24); return d + (d === 1 ? ' day' : ' days'); })()}</span>`;
+        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${formatTimeRemaining(hoursOutPW - 60)}</span>`;
         return '<span class="check" style="color:var(--muted);">Not marked sent yet</span>';
       })()}
     </div>`;
@@ -761,7 +785,7 @@ function renderCardInner(listNum, focusName) {
         const status = preDepartureReminderStatus(repName);
         if (status === 'sent') return '<span class="check" style="color:var(--green);font-weight:600;">✓ Sent</span>';
         if (status === 'error') return '<span class="check" style="color:#a33;font-weight:600;">⚠ Check status</span>';
-        if (depTooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${(() => { const d = Math.ceil((hoursOut - 28) / 24); return d + (d === 1 ? ' day' : ' days'); })()}</span>`;
+        if (depTooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${formatTimeRemaining(hoursOut - 28)}</span>`;
         return '<span class="check" style="color:var(--muted);">Not marked sent yet</span>';
       })()}
     </div>`;
@@ -807,17 +831,17 @@ function renderCardInner(listNum, focusName) {
   // Pre-Arrival Welcome as the first real actionable item.
   if (pStatus === 'error') nextAction = { text: 'Pre-Arrival Welcome is blocked — check status', icon: '⚠', color: '#a33', target: 'action-prearrival' };
   else if (!tooEarly && pStatus !== 'sent') nextAction = { text: 'Send Pre-Arrival Welcome Message', icon: '📤', color: '#8a6d1f', target: 'action-prearrival' };
-  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${(() => { const d = Math.ceil((hoursOutPW - 60) / 24); return d + (d === 1 ? ' day' : ' days'); })()}`, icon: '⏳', color: '#888', target: null };
+  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${formatTimeRemaining(hoursOutPW - 60)}`, icon: '⏳', color: '#888', target: null };
   else if (!noPickup && arrLeg && !transportReceivedStatus(repName)) nextAction = { text: 'Mark Transport Received once picked up', icon: '🚐', color: '#8a6d1f', target: 'action-received' };
   else if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin' };
   else if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };
   else if (!noDropoff && !depTooEarly && dStatus !== 'sent') nextAction = { text: 'Send Pre-Departure Reminder', icon: '📤', color: '#8a6d1f', target: 'action-predeparture' };
-  else if (!noDropoff && depTooEarly && dStatus !== 'sent') nextAction = { text: `Send Pre Departure Reminder in ${(() => { const d = Math.ceil((hoursOut - 28) / 24); return d + (d === 1 ? ' day' : ' days'); })()}`, icon: '⏳', color: '#888', target: null };
+  else if (!noDropoff && depTooEarly && dStatus !== 'sent') nextAction = { text: `Send Pre Departure Reminder in ${formatTimeRemaining(hoursOut - 28)}`, icon: '⏳', color: '#888', target: null };
   else nextAction = { text: 'All caught up for this guest right now', icon: '✅', color: '#1a5c2a', target: null };
 
   const bannerLabel = nextAction.target ? 'NEXT ACTION' : (nextAction.icon === '✅' ? 'STATUS' : 'UPCOMING');
   const domesticBadge = isDomesticArrival
-    ? `<div style="display:inline-block;background:#fdecea;color:#a12622;font-weight:700;font-size:11px;letter-spacing:0.3px;padding:4px 10px;border-radius:6px;margin-bottom:10px;">✈ DOMESTIC ARRIVAL</div>`
+    ? `<div style="display:inline-block;background:#d6e9f8;color:#1c5a85;font-weight:700;font-size:11px;letter-spacing:0.3px;padding:4px 10px;border-radius:6px;margin-bottom:10px;">✈ DOMESTIC ARRIVAL</div>`
     : '';
   const nextActionBanner = `
     ${domesticBadge}
@@ -836,7 +860,9 @@ function renderCardInner(listNum, focusName) {
     <div class="section-label">📞 Contact</div>
     ${contactRows}
 
-    <div class="section-label hotel-toggle" id="hotel-section-header" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">🏨 Hotel Info &gt;&gt; Click for details <span class="chevron" style="float:right;">▸</span></div>
+    <div class="info-card hotel-toggle" id="hotel-section-header" style="cursor:pointer;user-select:none;" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.chevron').textContent = this.nextElementSibling.classList.contains('collapsed') ? '▸' : '▾';">
+      <div class="task-title" style="margin-bottom:0;">🏨 Hotel Info &gt;&gt; Click for details <span class="chevron" style="float:right;">▸</span></div>
+    </div>
     <div class="hotel-collapsible collapsed">
       <div class="send-row" id="action-hotelconf" style="display:none;">
         ${(() => {
@@ -856,7 +882,6 @@ function renderCardInner(listNum, focusName) {
       ${hotelHTML}
     </div>
 
-    <div class="section-label">✅ Checklist Pre Arrival</div>
     ${flightConfRow}
     ${flightArrivalCard}
     ${preArrivalWelcomeRow}

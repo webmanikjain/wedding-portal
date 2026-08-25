@@ -10,12 +10,15 @@
   header .sub { font-size:0.76rem; color:#cfd8e6; }
   .top-actions { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
   .top-actions a, .top-actions button { color:white; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:6px; text-decoration:none; font-size:0.78rem; font-weight:600; font-family:inherit; cursor:pointer; }
-  nav.daynav { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-  nav.daynav button { color:white; background:rgba(255,255,255,0.12); padding:5px 11px; border-radius:14px; border:1px solid rgba(255,255,255,0.25); cursor:pointer; font-size:0.74rem; font-family:inherit; }
-  nav.daynav button.active { background:var(--gold); color:#26282b; border-color:var(--gold); }
+  .search-row { margin-top:10px; display:flex; gap:8px; }
+  .search-row input { flex:1; padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.3); font-size:0.85rem; }
+  .search-row button { background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:8px 12px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; }
+  nav.daynav { margin-top:10px; }
+  nav.daynav select { width:100%; max-width:280px; padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15); color:white; font-size:0.85rem; font-family:inherit; cursor:pointer; }
+  nav.daynav select option { color:#26282b; }
   main { max-width:1200px; margin:0 auto; padding:12px 12px 60px; }
   .day-section.day-hidden { display:none; }
-  .day-header { font-size:1.05rem; font-weight:700; color:var(--navy); border-bottom:3px solid var(--gold); padding-bottom:8px; margin:20px 0 14px; }
+  .day-header { font-size:1.05rem; font-weight:700; color:var(--navy); border-bottom:3px solid var(--gold); padding-bottom:8px; margin:20px 0 14px; position:sticky; top:var(--header-h, 220px); z-index:5; background:var(--paper); padding-top:6px; }
   .own-section-header { font-size:0.92rem; font-weight:700; color:var(--amber); border-bottom:2px solid #fff3cd; padding-bottom:6px; margin:24px 0 12px; }
   .live-status-badge span { display:inline-block; margin-top:3px; font-size:0.7rem; padding:2px 6px; border-radius:6px; font-weight:600; }
   .live-scheduled { background:#e9ecef; color:#495057; }
@@ -35,10 +38,16 @@
   .pax-table td { padding:7px 8px; border-bottom:1px solid #eee; white-space:nowrap; }
   tr.row-arrived td { background:#eaf7ee; }
   tr.row-checkedin td { background:#c3e6cb; }
+  @keyframes tapConfirmPulse { 0% { transform:scale(1); box-shadow:0 0 0 0 rgba(26,92,42,0.5); } 40% { transform:scale(1.15); box-shadow:0 0 0 8px rgba(26,92,42,0); } 100% { transform:scale(1); box-shadow:0 0 0 0 rgba(26,92,42,0); } }
+  .tap-confirm { animation: tapConfirmPulse 0.5s ease-out; border-radius:6px; }
+  .van-collapsed { cursor:pointer; opacity:0.75; }
+  .van-collapsed .van-header, .van-collapsed .own-header { border-radius:8px; }
+  .done-badge { font-size:0.68rem; background:#d4edda; color:#1a5c2a; padding:2px 7px; border-radius:8px; font-weight:700; margin-left:6px; }
+  .collapse-hint { font-size:0.68rem; opacity:0.85; cursor:pointer; margin-left:8px; text-decoration:underline; }
   .name-cell { font-weight:700; }
   .name-link { color:var(--navy); text-decoration:none; border-bottom:1px dotted var(--navy); }
   .tag-badge { font-size:0.62rem; background:#eaf1fb; color:#1c4a75; padding:1px 5px; border-radius:7px; margin-left:5px; }
-  .domestic-badge { font-size:0.62rem; background:#fdecea; color:#a12622; padding:1px 5px; border-radius:7px; margin-left:5px; font-weight:600; }
+  .domestic-badge { font-size:0.62rem; background:#d6e9f8; color:#1c5a85; padding:1px 5px; border-radius:7px; margin-left:5px; font-weight:600; }
   .seat-badge { font-size:0.7rem; background:#fdecea; color:#a12622; padding:2px 6px; border-radius:7px; font-weight:600; }
   .wa-icon { text-decoration:none; font-size:1.05rem; display:inline-block; background:#25D366; border-radius:50%; width:26px; height:26px; line-height:26px; text-align:center; }
   .flight-link { color:var(--navy); text-decoration:none; border-bottom:1px dotted var(--navy); font-weight:600; }
@@ -69,6 +78,10 @@
     <a href="index.html">← Planner Portal</a>
     <a href="#own-arrangements-section" id="jumpOwnBtn">🚗 No Pickup Guests List</a>
     <button id="refreshStatusBtn" onclick="refreshLiveStatus()">🔄 Refresh Flight Status</button>
+  </div>
+  <div class="search-row">
+    <input type="text" id="guestSearch" placeholder="🔍 Search guest name…" autocomplete="off">
+    <button id="clearSearchBtn" onclick="clearGuestSearch()" style="display:none;">✕ Show All</button>
   </div>
   <div class="scroll-hint">👉 swipe tables sideways to see all columns</div>
 </header>
@@ -123,6 +136,21 @@ function flightDateTime(dateStr, timeStr) {
   }
   return d;
 }
+
+function cssEscape(s) { return (s || '').replace(/["\\]/g, '\\$&'); }
+function pulseCheckbox(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  const wrapper = el.closest('label') || el;
+  wrapper.classList.add('tap-confirm');
+  setTimeout(() => wrapper.classList.remove('tap-confirm'), 500);
+}
+
+function updateHeaderHeightVar() {
+  const header = document.querySelector('header');
+  if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+}
+window.addEventListener('resize', updateHeaderHeightVar);
 
 async function refreshLiveStatus() {
   const btn = document.getElementById('refreshStatusBtn');
@@ -257,6 +285,16 @@ function hoursUntil(dateStr, timeStr) {
   const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parts[0], parts[1]);
   return (target - new Date()) / (60 * 60 * 1000);
 }
+// Shows "opens in X hours" once under a day remains, rather than always
+// rounding up to "1 day" - matches index.html's identical helper.
+function formatTimeRemaining(hoursRemaining) {
+  if (hoursRemaining < 24) {
+    const h = Math.max(1, Math.ceil(hoursRemaining));
+    return h === 1 ? '1 hour' : `${h} hours`;
+  }
+  const d = Math.ceil(hoursRemaining / 24);
+  return d === 1 ? '1 day' : `${d} days`;
+}
 function fmtDateFull(room) { return room && room.checkIn ? room.checkIn : 'TBC'; }
 
 // Message #5a/5b fallback - mirrors MSGS.preArrivalWelcome in index.html,
@@ -356,9 +394,8 @@ function renderPassengerRow(rawName) {
   const contact = EXPORT.contacts[name];
   const kidBadge = tag !== 'Adult' ? `<span class="tag-badge">${tag}</span>` : '';
   const isDomesticArrival = leg && leg.origin && leg.origin.includes('Phuket');
-  const domesticBadge = isDomesticArrival ? `<span class="domestic-badge">✈ DOMESTIC</span>` : '';
   const seatBadge = seat ? `<span class="seat-badge">${seat}</span>` : '';
-  const contactCell = contact ? `<a href="https://api.whatsapp.com/send?phone=${cleanPhone(contact)}" target="_blank" class="wa-icon" title="WhatsApp ${contact}">💬</a>` : '<span class="muted">—</span>';
+  const contactCell = contact ? `<a href="https://api.whatsapp.com/send?phone=${cleanPhone(contact)}" target="_blank" class="wa-icon" title="Click to WhatsApp ${contact}">💬</a>` : '<span class="muted">—</span>';
   const originCode = extractCode(leg ? leg.origin : '');
   const destCode = extractCode(leg ? leg.destination : '');
   const tooltip = leg ? `${leg.airline||''} — ${leg.origin||''} to ${leg.destination||''}` : '';
@@ -384,7 +421,7 @@ function renderPassengerRow(rawName) {
   if (pStatus === 'error') {
     prearrivalCell = `<td class="prearrival-cell"><span class="blocked-badge" title="Marked Error wait - resolve before sending">🚫 BLOCKED</span></td>`;
   } else if (tooEarly && pStatus !== 'sent') {
-    prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${Math.ceil((hoursOutPW - 60) / 24)}d</span></td>`;
+    prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${formatTimeRemaining(hoursOutPW - 60)}</span></td>`;
   } else {
     const selCls = pStatus === 'sent' ? 'yes' : 'oksend';
     const btnLabel = (pStatus === 'sent' ? 'Re-send' : 'Send') + (isDomesticArrival ? ' (Domestic)' : '');
@@ -401,11 +438,11 @@ function renderPassengerRow(rawName) {
   const checkedIn = roomListNum !== undefined && roomCheckedInStatus(roomListNum);
   const arrived = !noPickup && transportReceivedStatus(name);
   const rowClass = checkedIn ? 'row-checkedin' : (arrived ? 'row-arrived' : '');
-  const hotelCell = roomListNum === undefined ? '<span class="muted">N/A (staff)</span>'
-    : (room.confirmation ? `<a href="${hotelLink}" target="_blank" class="hotel-link">🏨 ${room.confirmation}</a>` : '<span class="muted">TBC</span>');
+  const hotelLinkHtml = roomListNum === undefined ? '<span class="muted">N/A</span>'
+    : (room.confirmation ? `<a href="${hotelLink}" target="_blank" class="hotel-link" title="Open portal page with hotel details expanded">🏨 ${room.confirmation}</a>` : '<span class="muted">TBC</span>');
   const checkinDateVal = roomListNum === undefined ? null : (EXPORT.rooms[String(roomListNum)] && EXPORT.rooms[String(roomListNum)].checkIn);
   const confirmCheckinCell = roomListNum === undefined ? '<span class="muted">—</span>'
-    : `<span class="checkin-combo"><span class="checkin-date">${checkinDateVal || 'TBC'}</span><input type="checkbox" class="checkedin-check" data-room="${roomListNum}" ${checkedIn ? 'checked' : ''}></span>`;
+    : `<span class="checkin-combo"><span class="checkin-date">${checkinDateVal || 'TBC'}</span><input type="checkbox" class="checkedin-check" data-room="${roomListNum}" ${checkedIn ? 'checked' : ''}>${hotelLinkHtml}</span>`;
   const flightArrivalCell = leg && leg.date ? `${leg.date.split(' ').slice(0,2).join('-')}: ${leg.time || 'TBC'}` : 'TBC';
   const flightKey = leg ? `${leg.flightNo}|${leg.date}` : null;
   const liveStatus = flightKey ? LIVE_STATUS[flightKey] : null;
@@ -413,37 +450,74 @@ function renderPassengerRow(rawName) {
     ? `<span class="live-status-badge" data-flightno="${leg.flightNo || ''}" data-date="${leg.date ? new Date(leg.date).toISOString().slice(0,10) : ''}">${liveStatus ? liveStatusLabel(liveStatus) : ''}</span>`
     : '';
 
-  return `<tr class="${rowClass}">
+  return `<tr class="${rowClass}" data-search="${name.toLowerCase()}">
     ${prearrivalCell}
-    <td class="name-cell">${nameCell}${kidBadge}${seatBadge}${domesticBadge}</td>
+    <td class="name-cell" title="List #${roomListNum !== undefined ? roomListNum : '—'}${room.room ? ', Room ' + room.room : ''}">${nameCell}${kidBadge}${seatBadge}</td>
     <td class="center">${contactCell}</td>
     <td title="${tooltip}">${(() => {
       if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
       const fa = flightAwareLink(leg.flightNo, leg.date, leg.time);
       if (fa.copyOnly) {
-        return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copies ${fa.ident} to clipboard, then opens FlightAware search">${leg.flightNo} 📋</a>`;
+        return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copy flight number to check status on FlightAware">${leg.flightNo} 📋</a>`;
       }
-      return `<a href="${fa.url}" target="_blank" class="flight-link">${leg.flightNo}</a>`;
+      return `<a href="${fa.url}" target="_blank" class="flight-link" title="Check flight status history">${leg.flightNo}</a>`;
     })()}</td>
+    ${arrivedCell}
     <td title="${tooltip}">${leg ? `${originCode} → ${destCode}` : ''}</td>
     <td>${flightArrivalCell}${liveStatusBadge}</td>
-    ${arrivedCell}
-    <td>${hotelCell}</td>
     <td>${confirmCheckinCell}</td>
   </tr>`;
 }
 
 function tableHead() {
-  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Contact</th><th>Flight</th><th>Route</th><th>Flight Arrival</th><th>Arrived?</th><th>Hotel Conf</th><th>Confirm Hotel Check-In</th></tr></thead>`;
+  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Contact</th><th>Flight</th><th>Arrived?</th><th>Route</th><th>Flight Arrival</th><th>Confirm Hotel Check-In</th></tr></thead>`;
+}
+
+// Vans where every passenger is done get auto-collapsed to a one-line
+// summary rather than hidden entirely - still there, just out of the way.
+// Manually re-expanding a collapsed van persists across re-renders via this set.
+const MANUALLY_EXPANDED = new Set();
+function slotKey(slot) { return slot.van_id || `own-${slot.names[0]}`; }
+function isSlotComplete(slot) {
+  return slot.names.every(rawName => {
+    const name = baseName(rawName);
+    const leg = EXPORT.arrivals.find(f => f.name === name);
+    const noPickupPerson = !leg || (leg.pickup && leg.pickup.trim().startsWith('N'));
+    if (slot.own || noPickupPerson) {
+      const roomListNum = EXPORT.rooms_by_name[name];
+      return roomListNum === undefined || roomCheckedInStatus(roomListNum);
+    }
+    return transportReceivedStatus(name);
+  });
+}
+function toggleVanCollapse(key) {
+  if (MANUALLY_EXPANDED.has(key)) MANUALLY_EXPANDED.delete(key);
+  else MANUALLY_EXPANDED.add(key);
+  renderAll();
 }
 
 function renderSlot(slot) {
-  const rows = slot.names.map(renderPassengerRow).join('');
+  const key = slotKey(slot);
+  const complete = isSlotComplete(slot);
+  const searchBox = document.getElementById('guestSearch');
+  const searchActive = searchBox && searchBox.value.trim().length > 0;
+  const collapsed = complete && !MANUALLY_EXPANDED.has(key) && !searchActive;
+  const firstLeg = EXPORT.arrivals.find(f => f.name === baseName(slot.names[0]));
+  const isDomestic = firstLeg && firstLeg.origin && firstLeg.origin.includes('Phuket');
+  const domesticBadge = isDomestic ? ` <span class="domestic-badge">✈ DOMESTIC</span>` : '';
   const headerClass = slot.own ? 'own-header' : 'van-header';
-  const label = slot.own ? '🚗 Own Arrangements' : `🚐 ${slot.van_id}`;
+  const label = (slot.own ? '🚗 Own Arrangements' : `🚐 ${slot.van_id}`) + domesticBadge;
   const timeLabel = slot.own ? 'No Pickup' : `Estd. Pick up: ${slot.time} hrs`;
+
+  if (collapsed) {
+    return `<div class="van-card van-collapsed ${slot.own ? 'own-arrangement' : ''}" onclick="toggleVanCollapse('${key.replace(/'/g,"\\'")}')">
+      <div class="${headerClass}"><span>${label} <span class="done-badge">✅ All done (${slot.names.length}/${slot.names.length})</span></span><span>▸ tap to expand</span></div>
+    </div>`;
+  }
+  const rows = slot.names.map(renderPassengerRow).join('');
+  const collapseAffordance = complete ? `<span class="collapse-hint" onclick="event.stopPropagation(); toggleVanCollapse('${key.replace(/'/g,"\\'")}')">▾ tap to collapse</span>` : '';
   return `<div class="van-card ${slot.own ? 'own-arrangement' : ''}">
-    <div class="${headerClass}"><span>${label}</span><span>${timeLabel}</span></div>
+    <div class="${headerClass}"><span>${label}</span><span>${timeLabel} ${collapseAffordance}</span></div>
     <div class="table-wrap"><table class="pax-table">${tableHead()}<tbody>${rows}</tbody></table></div>
   </div>`;
 }
@@ -492,17 +566,17 @@ function renderAll() {
     </div>` : '';
 
   main.innerHTML = dayHtml + ownHtml;
+  const searchBox = document.getElementById('guestSearch');
+  if (searchBox && searchBox.value) filterGuestSearch(searchBox.value);
+  updateHeaderHeightVar();
 }
 
 function renderDayNav() {
   const nav = document.getElementById('dayNav');
-  nav.innerHTML = SORTED_DATES.map((date, i) => `<button data-date="${date}" class="${i===0?'active':''}">${fmtDayNavLabel(date)}</button>`).join('');
-  nav.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      nav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelector(`.day-section[data-date="${btn.dataset.date}"]`).scrollIntoView({ behavior: 'smooth' });
-    });
+  nav.innerHTML = `<select id="daySelect">${SORTED_DATES.map(date => `<option value="${date}">${fmtDayNavLabel(date)}</option>`).join('')}</select>`;
+  document.getElementById('daySelect').addEventListener('change', (e) => {
+    const section = document.querySelector(`.day-section[data-date="${e.target.value}"]`);
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
   });
 }
 
@@ -516,9 +590,21 @@ async function init() {
 
 document.addEventListener('change', (e) => {
   const arrived = e.target.closest('.arrived-check');
-  if (arrived) { toggleTransportReceived(arrived.dataset.guest, arrived.checked); renderAll(); return; }
+  if (arrived) {
+    const guest = arrived.dataset.guest;
+    toggleTransportReceived(guest, arrived.checked);
+    renderAll();
+    pulseCheckbox(`.arrived-check[data-guest="${cssEscape(guest)}"]`);
+    return;
+  }
   const checkedin = e.target.closest('.checkedin-check');
-  if (checkedin) { toggleRoomCheckedIn(parseInt(checkedin.dataset.room), checkedin.checked); renderAll(); return; }
+  if (checkedin) {
+    const room = checkedin.dataset.room;
+    toggleRoomCheckedIn(parseInt(room), checkedin.checked);
+    renderAll();
+    pulseCheckbox(`.checkedin-check[data-room="${room}"]`);
+    return;
+  }
   const sel = e.target.closest('.statusSelect[data-guest]');
   if (sel) {
     const key = baseName(sel.dataset.guest);
@@ -549,6 +635,35 @@ document.addEventListener('click', (e) => {
     // Link still navigates to the blank FlightAware search page via its href/target
   }
 });
+
+function filterGuestSearch(term) {
+  const clearBtn = document.getElementById('clearSearchBtn');
+  const t = term.trim().toLowerCase();
+  if (!t) {
+    document.querySelectorAll('[data-search]').forEach(row => row.style.display = '');
+    document.querySelectorAll('.van-card').forEach(card => card.style.display = '');
+    document.querySelectorAll('.day-section').forEach(sec => sec.style.display = '');
+    clearBtn.style.display = 'none';
+    return;
+  }
+  clearBtn.style.display = '';
+  document.querySelectorAll('[data-search]').forEach(row => {
+    row.style.display = row.dataset.search.includes(t) ? '' : 'none';
+  });
+  document.querySelectorAll('.van-card').forEach(card => {
+    const anyVisible = Array.from(card.querySelectorAll('[data-search]')).some(row => row.style.display !== 'none');
+    card.style.display = anyVisible ? '' : 'none';
+  });
+  document.querySelectorAll('.day-section').forEach(sec => {
+    const anyVisible = Array.from(sec.querySelectorAll('.van-card')).some(card => card.style.display !== 'none');
+    sec.style.display = anyVisible ? '' : 'none';
+  });
+}
+function clearGuestSearch() {
+  document.getElementById('guestSearch').value = '';
+  filterGuestSearch('');
+}
+document.getElementById('guestSearch').addEventListener('input', (e) => filterGuestSearch(e.target.value));
 
 init();
 </script>
