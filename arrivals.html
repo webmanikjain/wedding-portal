@@ -66,8 +66,6 @@
   .blocked-badge { display:inline-block; background:#842029; color:white; font-weight:800; font-size:0.75rem; padding:5px 10px; border-radius:6px; letter-spacing:0.3px; cursor:help; }
   .send-btn-mini { font-size:0.72rem; padding:4px 8px; border-radius:5px; border:1px solid var(--green); background:white; color:var(--green); cursor:pointer; font-weight:600; white-space:nowrap; }
   .waiting-badge { font-size:0.72rem; background:#f0f0f0; color:#888; padding:3px 8px; border-radius:6px; white-space:nowrap; }
-  .scroll-hint { font-size:0.7rem; color:#999; text-align:center; padding:4px; display:none; }
-  @media (max-width:700px) { .scroll-hint { display:block; } }
   .loading { text-align:center; padding:40px; color:#888; }
 </style></head>
 <body>
@@ -90,7 +88,6 @@
     </select>
     <button id="clearSearchBtn" onclick="clearGuestSearch()" style="display:none;">✕ Show All</button>
   </div>
-  <div class="scroll-hint">👉 swipe tables sideways to see all columns</div>
 </header>
 <main id="main"><div class="loading">Loading arrivals and live status…</div></main>
 
@@ -474,7 +471,7 @@ function renderPassengerRow(rawName) {
 
   return `<tr class="${rowClass}" data-search="${name.toLowerCase()}" data-status="${pStatus}">
     ${prearrivalCell}
-    <td class="name-cell" title="List #${roomListNum !== undefined ? roomListNum : '—'}${room.room ? ', Room ' + room.room : ''}">${nameCell}${kidBadge}${seatBadge}</td>
+    <td class="name-cell" title="Click for details">${nameCell}${kidBadge}${seatBadge}</td>
     <td class="center">${contactCell}</td>
     <td title="${tooltip}">${(() => {
       if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
