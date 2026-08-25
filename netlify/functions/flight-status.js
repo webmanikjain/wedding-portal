@@ -67,9 +67,12 @@ async function queryAviationStack(flightNo, date) {
 
   const url = `http://api.aviationstack.com/v1/flights?access_key=${key}&flight_iata=${encodeURIComponent(flightNo)}&flight_date=${date}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`AviationStack error: ${res.status}`);
-  const data = await res.json();
-  if (data.error) throw new Error(`AviationStack error: ${data.error.message || 'unknown'}`);
+  const body = await res.json().catch(() => null);
+  if (!res.ok || (body && body.error)) {
+    const detail = body && body.error ? `${body.error.code || ''} ${body.error.message || body.error.info || ''}`.trim() : `HTTP ${res.status}`;
+    throw new Error(`AviationStack error: ${detail}`);
+  }
+  const data = body;
 
   const match = (data.data || [])[0];
   if (!match) throw new Error('AviationStack: no matching flight found');
