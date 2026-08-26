@@ -649,7 +649,17 @@ function scrollToTodayOrNext() {
   const targetDate = findTodayOrNextSortedDate();
   if (!targetDate) return;
   const section = document.querySelector(`.day-section[data-date="${targetDate}"]`);
-  if (section) section.scrollIntoView({ behavior: 'auto' });
+  if (section) {
+    // scrollIntoView doesn't reliably account for nested sticky elements
+    // (the main header AND the day-header inside each section are both
+    // sticky) - it was landing partway into the first van card instead of
+    // at the top of the day. Calculating the target position manually and
+    // scrolling there directly sidesteps that entirely.
+    const headerEl = document.querySelector('header');
+    const headerHeight = headerEl ? headerEl.offsetHeight : 0;
+    const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, sectionTop - headerHeight), behavior: 'auto' });
+  }
   const daySelect = document.getElementById('daySelect');
   if (daySelect) daySelect.value = targetDate;
 }
