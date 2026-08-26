@@ -14,20 +14,74 @@
 //              recurring flight numbers
 //
 // Returns a normalized shape regardless of which provider answered:
-//   { source: 'flightaware'|'aviationstack', status: 'scheduled'|'active'|'landed'|'cancelled'|'delayed'|'unknown',
-//     scheduledArrival, estimatedArrival, actualArrival, gate, terminal }
+//   { source: 'flightaware'|'aviationstack', status, scheduledArrival, estimatedArrival, actualArrival, gate, terminal }
+//
+// Status values:
+//   cancelled           - flight cancelled
+//   landed_on_time      - arrived, within 15 min of scheduled
+//   landed_delayed      - arrived, 15+ min later than scheduled
+//   arrival_delayed     - en route or on ground, but arrival is now expected
+//                         later than originally scheduled (15+ min)
+//   active              - en route, arrival still expected on time
+//   departure_delayed   - still on the ground, departure itself is running
+//                         late (15+ min) - arrival will very likely also slip
+//   scheduled           - still on the ground, on time so far
+//   unknown             - provider returned something outside the above
+
+const DELAY_THRESHOLD_MIN = 15;
+
+function minutesLate(scheduled, estimated) {
+  if (!scheduled || !estimated) return 0;
+  const sched = new Date(scheduled), est = new Date(estimated);
+  if (isNaN(sched) || isNaN(est)) return 0;
+  return (est - sched) / 60000;
+}
+
+// Takes a normalized set of fields so both providers can share this logic
+// despite using different raw field names.
+function computeStatus({ cancelled, scheduledOut, estimatedOut, actualOut, scheduledIn, estimatedIn, actualIn }) {
+  if (cancelled) return 'cancelled';
+  if (actualIn) {
+    const arrivedLateMin = minutesLate(scheduledIn, actualIn);
+    return arrivedLateMin >= DELAY_THRESHOLD_MIN ? 'landed_delayed' : 'landed_on_time';
+  }
+
+  const arrivalLateMin = minutesLate(scheduledIn, estimatedIn);
+  const departureLateMin = minutesLate(scheduledOut, estimatedOut);
+
+  if (actualOut) {
+    // Already departed, still en route
+    return arrivalLateMin >= DELAY_THRESHOLD_MIN ? 'arrival_delayed' : 'active';
+  }
+  // Still on the ground
+  if (departureLateMin >= DELAY_THRESHOLD_MIN) return 'departure_delayed';
+  if (arrivalLateMin >= DELAY_THRESHOLD_MIN) return 'arrival_delayed'; // pre-departure but already predicted late
+  return 'scheduled';
+}
+
+// Converts a UTC ISO timestamp to the Bangkok-local calendar date (YYYY-MM-DD)
+// it falls on. Critical for early-morning Bangkok arrivals/departures (roughly
+// midnight-7am Bangkok time), whose UTC timestamp falls on the PREVIOUS UTC
+// calendar date - naive string-prefix matching against the UTC timestamp
+// silently picks up the wrong day's occurrence of a daily flight number.
+function utcToBangkokDateStr(utcIso) {
+  const d = new Date(utcIso);
+  if (isNaN(d)) return null;
+  const bangkok = new Date(d.getTime() + 7 * 60 * 60000);
+  return bangkok.toISOString().slice(0, 10);
+}
 
 async function queryFlightAware(flightNo, date) {
   const key = process.env.FLIGHTAWARE_API_KEY;
   if (!key) throw new Error('FLIGHTAWARE_API_KEY not configured');
 
-  // Constrain the query to a tight window around the requested date so we
-  // don't have to rely purely on client-side filtering of whatever FlightAware
-  // happens to return by default.
-  const start = `${date}T00:00:00Z`;
-  const endDate = new Date(`${date}T00:00:00Z`);
-  endDate.setUTCDate(endDate.getUTCDate() + 1);
-  const end = endDate.toISOString().slice(0, 19) + 'Z';
+  // Query window must span the full Bangkok-local calendar day for `date`,
+  // expressed correctly in UTC terms - Bangkok midnight is 17:00 UTC the
+  // PREVIOUS day, not the same calendar date's 00:00 UTC.
+  const dateStartUtc = new Date(`${date}T00:00:00Z`).getTime() - 7 * 60 * 60000;
+  const dateEndUtc = dateStartUtc + 24 * 60 * 60000;
+  const start = new Date(dateStartUtc).toISOString().slice(0, 19) + 'Z';
+  const end = new Date(dateEndUtc).toISOString().slice(0, 19) + 'Z';
 
   const res = await fetch(
     `https://aeroapi.flightaware.com/aeroapi/flights/${encodeURIComponent(flightNo)}?start=${start}&end=${end}`,
@@ -41,14 +95,17 @@ async function queryFlightAware(flightNo, date) {
   // many different days and showing the wrong day's status would be worse
   // than showing nothing.
   const flights = data.flights || [];
-  const match = flights.find(f => (f.scheduled_in || f.scheduled_out || '').startsWith(date));
+  const match = flights.find(f => {
+    const ts = f.scheduled_in || f.scheduled_out;
+    return ts && utcToBangkokDateStr(ts) === date;
+  });
   if (!match) throw new Error(`FlightAware: no flight found for ${flightNo} on ${date}`);
 
-  let status = 'unknown';
-  if (match.cancelled) status = 'cancelled';
-  else if (match.actual_in) status = 'landed';
-  else if (match.actual_out) status = 'active';
-  else if (match.scheduled_in) status = 'scheduled';
+  const status = computeStatus({
+    cancelled: match.cancelled,
+    scheduledOut: match.scheduled_out, estimatedOut: match.estimated_out, actualOut: match.actual_out,
+    scheduledIn: match.scheduled_in, estimatedIn: match.estimated_in, actualIn: match.actual_in,
+  });
 
   return {
     source: 'flightaware',
@@ -82,16 +139,22 @@ async function queryAviationStack(flightNo, date) {
     throw new Error(`AviationStack: returned flight date ${match.flight_date} does not match requested ${date}`);
   }
 
-  const statusMap = { scheduled: 'scheduled', active: 'active', landed: 'landed', cancelled: 'cancelled', incident: 'unknown', diverted: 'unknown' };
+  const dep = match.departure || {};
+  const arr = match.arrival || {};
+  const status = match.flight_status === 'cancelled' ? 'cancelled' : computeStatus({
+    cancelled: false,
+    scheduledOut: dep.scheduled, estimatedOut: dep.estimated, actualOut: dep.actual,
+    scheduledIn: arr.scheduled, estimatedIn: arr.estimated, actualIn: arr.actual,
+  });
 
   return {
     source: 'aviationstack',
-    status: statusMap[match.flight_status] || 'unknown',
-    scheduledArrival: match.arrival ? match.arrival.scheduled : null,
-    estimatedArrival: match.arrival ? match.arrival.estimated : null,
-    actualArrival: match.arrival ? match.arrival.actual : null,
-    gate: match.arrival ? match.arrival.gate : null,
-    terminal: match.arrival ? match.arrival.terminal : null,
+    status,
+    scheduledArrival: arr.scheduled || null,
+    estimatedArrival: arr.estimated || null,
+    actualArrival: arr.actual || null,
+    gate: arr.gate || null,
+    terminal: arr.terminal || null,
   };
 }
 
