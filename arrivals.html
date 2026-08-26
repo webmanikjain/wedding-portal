@@ -22,6 +22,7 @@
   .day-header { font-size:1.05rem; font-weight:700; color:var(--navy); border-bottom:3px solid var(--gold); padding-bottom:8px; margin:20px 0 14px; position:sticky; top:var(--header-h, 220px); z-index:5; background:var(--paper); padding-top:6px; cursor:pointer; }
   .own-section-header { font-size:0.92rem; font-weight:700; color:var(--amber); border-bottom:2px solid #fff3cd; padding-bottom:6px; margin:24px 0 12px; }
   .live-status-badge span { display:inline-block; margin-top:3px; font-size:0.7rem; padding:2px 6px; border-radius:6px; font-weight:600; }
+  .live-scheduled { background:#eee; color:#888; }
   .live-active { background:#d6e9f8; color:#1c5a85; }
   .live-landed { background:#d4edda; color:#1a5c2a; }
   .live-landed-delayed { background:#ffe0b2; color:#8a4b00; }
@@ -111,7 +112,7 @@ function agoText(fetchedAt) {
 }
 function liveStatusLabel(s) {
   const map = {
-    // scheduled shows nothing - on track is the default, no news is good news
+    scheduled: { text: 'Scheduled', cls: 'live-scheduled' },
     active: { text: '✈ In Air, On Time', cls: 'live-active' },
     arrival_delayed: { text: '⚠️ Arrival Delayed', cls: 'live-delayed' },
     departure_delayed: { text: '⏱ Departure Delayed', cls: 'live-delayed' },
@@ -120,7 +121,7 @@ function liveStatusLabel(s) {
     cancelled: { text: '❌ Cancelled', cls: 'live-cancelled' },
   };
   const m = map[s.status];
-  if (!m) return ''; // scheduled, or an unrecognized status - show nothing rather than a "no data" badge
+  if (!m) return ''; // an unrecognized status - show nothing rather than a "no data" badge
   const detail = s.error ? ` — ${s.error}` : '';
   return `<span class="${m.cls}" title="Last updated ${agoText(s.fetchedAt)}${detail}">${m.text}</span>`;
 }
@@ -202,6 +203,7 @@ async function refreshLiveStatus() {
     return;
   }
   let done = 0, succeeded = 0, failed = 0;
+  const failedFlights = [];
   for (const key of uniqueFlights) {
     const [flightNo, isoDate, origDate] = key.split('|');
     try {
@@ -213,15 +215,17 @@ async function refreshLiveStatus() {
         succeeded++;
       } else {
         failed++;
+        failedFlights.push(flightNo);
       }
       // Failed lookups are skipped silently in the badges themselves - a "no
       // live data" badge would otherwise show up for every flight a smaller/
       // regional carrier isn't covered for, which is more noise than it's
-      // worth. This summary line still reports the count, though, so a
-      // failure is distinguishable from "not checked at all" without needing
+      // worth. This summary line still reports which ones failed, though, so
+      // that's distinguishable from "not checked at all" without needing
       // devtools.
     } catch (e) {
       failed++;
+      failedFlights.push(flightNo);
       console.warn('flight-status lookup failed for', flightNo, e);
     }
     done++;
@@ -229,7 +233,8 @@ async function refreshLiveStatus() {
   }
   if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Flight Status'; }
   const debugLine = document.getElementById('refreshDebugLine');
-  if (debugLine) debugLine.textContent = `Today (Bangkok): ${todayStr} · Checked ${uniqueFlights.size} flights · ${succeeded} succeeded · ${failed} failed`;
+  const failedNote = failedFlights.length ? ` (${failedFlights.join(', ')})` : '';
+  if (debugLine) debugLine.textContent = `Today (Bangkok): ${todayStr} · Checked ${uniqueFlights.size} flights · ${succeeded} succeeded · ${failed} failed${failedNote}`;
   renderAll();
 }
 
@@ -502,7 +507,7 @@ function renderPassengerRow(rawName) {
   const flightArrivalCell = leg && leg.date ? `${leg.date.split(' ').slice(0,2).join('-')}: ${leg.time || 'TBC'}` : 'TBC';
   const flightKey = leg ? `${leg.flightNo}|${leg.date}` : null;
   const liveStatus = flightKey ? LIVE_STATUS[flightKey] : null;
-  const liveStatusBadge = leg && !noPickup
+  const liveStatusBadge = leg && leg.flightNo
     ? `<span class="live-status-badge" data-flightno="${leg.flightNo || ''}" data-date="${leg.date ? new Date(leg.date).toISOString().slice(0,10) : ''}">${liveStatus ? liveStatusLabel(liveStatus) : ''}</span>`
     : '';
 
@@ -645,12 +650,36 @@ function renderDayNav() {
   });
 }
 
+function findTodayOrNextSortedDate() {
+  const now = nowBangkok();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  return SORTED_DATES.find(d => bangkokDateKey(d) >= todayStr) || SORTED_DATES[SORTED_DATES.length - 1];
+}
+
+function scrollToTodayOrNext() {
+  const targetDate = findTodayOrNextSortedDate();
+  if (!targetDate) return;
+  const section = document.querySelector(`.day-section[data-date="${targetDate}"]`);
+  if (section) section.scrollIntoView({ behavior: 'auto' });
+  const daySelect = document.getElementById('daySelect');
+  if (daySelect) daySelect.value = targetDate;
+}
+
 async function init() {
   await loadStatus();
   DAY_SLOTS = buildDaySlots();
   SORTED_DATES = Object.keys(DAY_SLOTS).sort((a,b) => new Date(a) - new Date(b));
   renderDayNav();
   renderAll();
+  // Jump straight to today's arrivals (or the next upcoming day, if none
+  // today) rather than always starting at the very first day of the event -
+  // avoids confusion with already-completed earlier days.
+  scrollToTodayOrNext();
+  // Auto-check today's flight statuses on load, so the planner doesn't have
+  // to remember to tap Refresh every time they open the page. Re-apply the
+  // scroll position once this finishes too, since it triggers a re-render.
+  await refreshLiveStatus();
+  scrollToTodayOrNext();
 }
 
 document.addEventListener('change', (e) => {
