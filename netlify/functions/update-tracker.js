@@ -11,8 +11,10 @@ function getTrackerStore() {
 
 // Body shape (one of):
 //   { type: 'message', guestName, field, value }        field: hotelConfirmationSent | flightConfirmationSent | preArrivalWelcomeSent | preDepartureReminderSent
-//   { type: 'transportReceived', guestName, value }     value: true|false
-//   { type: 'roomCheckedIn', listNum, value }            value: true|false
+//   { type: 'transportReceived', guestName, value }     value: true|false  (arrivals - picked up from airport)
+//   { type: 'roomCheckedIn', listNum, value }            value: true|false  (arrivals - hotel check-in confirmed)
+//   { type: 'transportPickedUp', guestName, value }      value: true|false  (departures - return transport picked up guest from hotel)
+//   { type: 'roomCheckedOut', listNum, value }           value: true|false  (departures - hotel checkout confirmed)
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -22,6 +24,9 @@ exports.handler = async (event) => {
     const store = getTrackerStore();
     let data = await store.get('state-v2', { type: 'json' });
     if (!data) data = seed;
+    // Backward-compatible: older saved state predates these two fields
+    if (!data.transportPickedUp) data.transportPickedUp = {};
+    if (!data.roomCheckedOut) data.roomCheckedOut = {};
 
     if (body.type === 'message') {
       if (!data.messages[body.guestName]) data.messages[body.guestName] = {};
@@ -30,6 +35,10 @@ exports.handler = async (event) => {
       data.transportReceived[body.guestName] = body.value;
     } else if (body.type === 'roomCheckedIn') {
       data.roomCheckedIn[String(body.listNum)] = body.value;
+    } else if (body.type === 'transportPickedUp') {
+      data.transportPickedUp[body.guestName] = body.value;
+    } else if (body.type === 'roomCheckedOut') {
+      data.roomCheckedOut[String(body.listNum)] = body.value;
     } else {
       return { statusCode: 400, body: JSON.stringify({ error: 'Unknown type' }) };
     }

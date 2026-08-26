@@ -64,11 +64,16 @@ exports.handler = async () => {
       data = seed;
       backfillPickupDropoff(data);
       migrateAwayFromNoPickupPreArrival(data);
+      if (!data.transportPickedUp) data.transportPickedUp = {};
+      if (!data.roomCheckedOut) data.roomCheckedOut = {};
       await store.setJSON('state-v2', data);
     } else {
       const a = backfillPickupDropoff(data);
       const b = migrateAwayFromNoPickupPreArrival(data);
-      if (a || b) await store.setJSON('state-v2', data);
+      let c = false;
+      if (!data.transportPickedUp) { data.transportPickedUp = {}; c = true; }
+      if (!data.roomCheckedOut) { data.roomCheckedOut = {}; c = true; }
+      if (a || b || c) await store.setJSON('state-v2', data);
     }
     return {
       statusCode: 200,
