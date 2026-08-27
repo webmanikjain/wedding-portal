@@ -63,6 +63,7 @@
   .statusSelect.oksend { background:#d6e9f8; color:#1c5a85; font-weight:600; }
   .statusSelect.err { background:#f8d7da; color:#842029; font-weight:600; }
   .blocked-badge { display:inline-block; background:#842029; color:white; font-weight:800; font-size:0.75rem; padding:5px 10px; border-radius:6px; letter-spacing:0.3px; cursor:help; }
+  .sent-icon { font-size:1.1rem; cursor:pointer; padding:4px; }
   .send-btn-mini { font-size:0.72rem; padding:4px 8px; border-radius:5px; border:1px solid var(--green); background:white; color:var(--green); cursor:pointer; font-weight:600; white-space:nowrap; }
   .waiting-badge { font-size:0.72rem; background:#f0f0f0; color:#888; padding:3px 8px; border-radius:6px; white-space:nowrap; }
   .loading { text-align:center; padding:40px; color:#888; }
@@ -182,6 +183,13 @@ function bangkokDateKey(dateStr) {
   return `${parts[2]}-${months[parts[1]]}-${String(parseInt(parts[0],10)).padStart(2,'0')}`;
 }
 
+const REFRESH_CAP = 10; // FlightAware's Personal tier caps at 10 result-sets/minute -
+// firing more than that in a tight burst gets every request past the limit
+// rejected, not just the excess ones. Capping to 10 per refresh, and
+// rotating which 10 on each subsequent tap, keeps every batch comfortably
+// under that ceiling while still eventually covering the whole day.
+let refreshOffset = 0;
+
 async function refreshLiveStatus() {
   const btn = document.getElementById('refreshStatusBtn');
   if (btn) { btn.disabled = true; btn.textContent = '🔄 Refreshing…'; }
@@ -190,13 +198,25 @@ async function refreshLiveStatus() {
   // status doesn't depend on exactly what time you happen to click Refresh.
   const now = nowBangkok();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const uniqueFlights = new Set();
+  const REFRESH_CAP = 10; // FlightAware's Personal tier caps at 10 result-sets/minute -
+  // firing more than that in a tight burst gets every request past the limit
+  // rejected, not just the excess ones. Capping to the soonest flights keeps
+  // every refresh comfortably under that ceiling.
+  const flightMap = new Map(); // key -> earliest time seen for that flight
   EXPORT.arrivals.forEach(f => {
     if (!f.flightNo || !f.date) return;
     const isoDate = bangkokDateKey(f.date);
     if (!isoDate || isoDate !== todayStr) return;
-    uniqueFlights.add(`${f.flightNo}|${isoDate}|${f.date}`);
+    const key = `${f.flightNo}|${isoDate}|${f.date}`;
+    if (!flightMap.has(key)) flightMap.set(key, f.time || '23:59');
   });
+  const allTodayFlights = Array.from(flightMap.keys()).sort((a, b) => flightMap.get(a).localeCompare(flightMap.get(b)));
+  if (refreshOffset >= allTodayFlights.length) refreshOffset = 0; // wrap around
+  const batch = allTodayFlights.slice(refreshOffset, refreshOffset + REFRESH_CAP);
+  const skippedCount = Math.max(0, allTodayFlights.length - batch.length);
+  const uniqueFlights = new Set(batch);
+  const thisOffsetStart = refreshOffset;
+  refreshOffset = refreshOffset + REFRESH_CAP >= allTodayFlights.length ? 0 : refreshOffset + REFRESH_CAP;
   if (uniqueFlights.size === 0) {
     if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Flight Status'; }
     alert('No flights arriving today (Bangkok time) - nothing to refresh.');
@@ -204,6 +224,7 @@ async function refreshLiveStatus() {
   }
   let done = 0, succeeded = 0, failed = 0;
   const failedFlights = [];
+  let firstFailureReason = null;
   for (const key of uniqueFlights) {
     const [flightNo, isoDate, origDate] = key.split('|');
     try {
@@ -216,16 +237,20 @@ async function refreshLiveStatus() {
       } else {
         failed++;
         failedFlights.push(flightNo);
+        if (!firstFailureReason) {
+          const body = await res.json().catch(() => ({}));
+          firstFailureReason = body.error ? JSON.stringify(body.error).slice(0, 150) : `HTTP ${res.status}`;
+        }
       }
       // Failed lookups are skipped silently in the badges themselves - a "no
       // live data" badge would otherwise show up for every flight a smaller/
       // regional carrier isn't covered for, which is more noise than it's
-      // worth. This summary line still reports which ones failed, though, so
-      // that's distinguishable from "not checked at all" without needing
-      // devtools.
+      // worth. This summary line still reports which ones failed and why,
+      // though, so a real systemic failure is diagnosable without devtools.
     } catch (e) {
       failed++;
       failedFlights.push(flightNo);
+      if (!firstFailureReason) firstFailureReason = e.message;
       console.warn('flight-status lookup failed for', flightNo, e);
     }
     done++;
@@ -234,8 +259,10 @@ async function refreshLiveStatus() {
   if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Flight Status'; }
   const debugLine = document.getElementById('refreshDebugLine');
   const failedNote = failedFlights.length ? ` (${failedFlights.join(', ')})` : '';
-  if (debugLine) debugLine.textContent = `Today (Bangkok): ${todayStr} · Checked ${uniqueFlights.size} flights · ${succeeded} succeeded · ${failed} failed${failedNote}`;
-  renderAll();
+  const reasonNote = firstFailureReason ? ` · First failure reason: ${firstFailureReason}` : '';
+  const skippedNote = skippedCount > 0 ? ` · Checked flights ${thisOffsetStart+1}-${thisOffsetStart+batch.length} of ${allTodayFlights.length} today (tap Refresh again for the next batch)` : '';
+  if (debugLine) debugLine.textContent = `Today (Bangkok): ${todayStr} · Checked ${uniqueFlights.size} flights · ${succeeded} succeeded · ${failed} failed${failedNote}${reasonNote}${skippedNote}`;
+  renderAllPreservingScroll();
 }
 
 async function loadStatus() {
@@ -483,6 +510,8 @@ function renderPassengerRow(rawName) {
     </td>`;
   } else if (tooEarly && pStatus !== 'sent') {
     prearrivalCell = `<td class="prearrival-cell"><span class="waiting-badge">⏳ Opens in ${formatTimeRemaining(hoursOutPW - 72)}</span></td>`;
+  } else if (pStatus === 'sent' && !MESSAGE_EXPANDED.has(name)) {
+    prearrivalCell = `<td class="prearrival-cell"><span class="sent-icon" onclick="toggleMessageExpand('${name.replace(/'/g,"\\'")}')" title="Click to re-send or change status">✉️✓</span></td>`;
   } else {
     const selCls = pStatus === 'sent' ? 'yes' : 'oksend';
     const btnLabel = (pStatus === 'sent' ? 'Re-send' : 'Send') + (isDomesticArrival ? ' (Domestic)' : '');
@@ -499,8 +528,12 @@ function renderPassengerRow(rawName) {
   const checkedIn = roomListNum !== undefined && roomCheckedInStatus(roomListNum);
   const arrived = !noPickup && transportReceivedStatus(name);
   const rowClass = checkedIn ? 'row-checkedin' : (arrived ? 'row-arrived' : '');
+  // Once checked in, the confirmation # is no longer the useful fact - the
+  // actual assigned room number is. Same portal link either way.
   const hotelLinkHtml = roomListNum === undefined ? '<span class="muted">N/A</span>'
-    : (room.confirmation ? `<a href="${hotelLink}" target="_blank" class="hotel-link" title="Open portal page with hotel details expanded">🏨 ${room.confirmation}</a>` : '<span class="muted">TBC</span>');
+    : checkedIn
+      ? (room.room ? `<a href="${hotelLink}" target="_blank" class="hotel-link" title="Open portal page with hotel details expanded">🏨 Rm: ${room.room}</a>` : '<span class="muted">Room TBC</span>')
+      : (room.confirmation ? `<a href="${hotelLink}" target="_blank" class="hotel-link" title="Open portal page with hotel details expanded">🏨 ${room.confirmation}</a>` : '<span class="muted">TBC</span>');
   const checkinDateVal = roomListNum === undefined ? null : (EXPORT.rooms[String(roomListNum)] && EXPORT.rooms[String(roomListNum)].checkIn);
   const confirmCheckinCell = roomListNum === undefined ? '<span class="muted">—</span>'
     : `<span class="checkin-combo"><span class="checkin-date">${checkinDateVal || 'TBC'}</span><input type="checkbox" class="checkedin-check" data-room="${roomListNum}" ${checkedIn ? 'checked' : ''}>${hotelLinkHtml}</span>`;
@@ -538,11 +571,20 @@ function tableHead() {
 // summary rather than hidden entirely - still there, just out of the way.
 // Manually re-expanding a collapsed van persists across re-renders via this set.
 const MANUALLY_EXPANDED = new Set();
+// Which guests' Pre-Arrival Welcome cell has been manually expanded back to
+// full controls, despite being auto-compacted to the sent-icon since their
+// message is already marked Sent.
+const MESSAGE_EXPANDED = new Set();
+function toggleMessageExpand(name) {
+  if (MESSAGE_EXPANDED.has(name)) MESSAGE_EXPANDED.delete(name);
+  else MESSAGE_EXPANDED.add(name);
+  renderAllPreservingScroll();
+}
 const COLLAPSED_DAYS = new Set();
 function toggleDayCollapse(dateStr) {
   if (COLLAPSED_DAYS.has(dateStr)) COLLAPSED_DAYS.delete(dateStr);
   else COLLAPSED_DAYS.add(dateStr);
-  renderAll();
+  renderAllPreservingScroll();
 }
 function slotKey(slot) { return slot.van_id || `own-${slot.names[0]}`; }
 function isSlotComplete(slot) {
@@ -560,7 +602,7 @@ function isSlotComplete(slot) {
 function toggleVanCollapse(key) {
   if (MANUALLY_EXPANDED.has(key)) MANUALLY_EXPANDED.delete(key);
   else MANUALLY_EXPANDED.add(key);
-  renderAll();
+  renderAllPreservingScroll();
 }
 
 function renderSlot(slot) {
@@ -585,7 +627,7 @@ function renderSlot(slot) {
   const rows = slot.names.map(renderPassengerRow).join('');
   return `<div class="van-card ${slot.own ? 'own-arrangement' : ''}">
     <div class="${headerClass}" onclick="${complete ? `toggleVanCollapse('${key.replace(/'/g,"\\'")}')` : ''}"><span>${label}</span><span>${timeLabel}${complete ? ' ▾' : ''}</span></div>
-    <div class="table-wrap"><table class="pax-table">${tableHead()}<tbody>${rows}</tbody></table></div>
+    <div class="table-wrap" data-slotkey="${key.replace(/"/g,'&quot;')}"><table class="pax-table">${tableHead()}<tbody>${rows}</tbody></table></div>
   </div>`;
 }
 
@@ -605,6 +647,23 @@ function fmtDayNavLabel(dateStr) {
 
 let DAY_SLOTS = {};
 let SORTED_DATES = [];
+
+// A checkbox toggle triggers a full renderAll(), which rebuilds every table
+// from scratch - fresh DOM elements always start unscrolled, so any table
+// you'd scrolled sideways to reach that checkbox snapped back to the left
+// edge every time. This preserves each table's scroll position across the
+// rebuild, matched by the stable per-van/per-day key rather than DOM identity
+// (which doesn't survive the rebuild).
+function renderAllPreservingScroll() {
+  const positions = {};
+  document.querySelectorAll('.table-wrap[data-slotkey]').forEach(el => {
+    if (el.scrollLeft) positions[el.dataset.slotkey] = el.scrollLeft;
+  });
+  renderAll();
+  document.querySelectorAll('.table-wrap[data-slotkey]').forEach(el => {
+    if (positions[el.dataset.slotkey]) el.scrollLeft = positions[el.dataset.slotkey];
+  });
+}
 
 function renderAll() {
   const main = document.getElementById('main');
@@ -697,7 +756,7 @@ document.addEventListener('change', (e) => {
   if (arrived) {
     const guest = arrived.dataset.guest;
     toggleTransportReceived(guest, arrived.checked);
-    renderAll();
+    renderAllPreservingScroll();
     pulseCheckbox(`.arrived-check[data-guest="${cssEscape(guest)}"]`);
     return;
   }
@@ -705,7 +764,7 @@ document.addEventListener('change', (e) => {
   if (checkedin) {
     const room = checkedin.dataset.room;
     toggleRoomCheckedIn(parseInt(room), checkedin.checked);
-    renderAll();
+    renderAllPreservingScroll();
     pulseCheckbox(`.checkedin-check[data-room="${room}"]`);
     return;
   }
@@ -715,7 +774,7 @@ document.addEventListener('change', (e) => {
     TRACKER.messages[key] = TRACKER.messages[key] || {};
     TRACKER.messages[key][sel.dataset.field] = sel.value;
     queueWrite({ type: 'message', guestName: key, field: sel.dataset.field, value: sel.value });
-    renderAll();
+    renderAllPreservingScroll();
   }
 });
 document.addEventListener('click', (e) => {
@@ -723,7 +782,7 @@ document.addEventListener('click', (e) => {
   if (btn) {
     window.open(btn.dataset.wa, '_blank');
     markSent(btn.dataset.guest, 'preArrivalWelcomeSent');
-    renderAll();
+    renderAllPreservingScroll();
     return;
   }
   const copyLink = e.target.closest('.flight-link-copy');
