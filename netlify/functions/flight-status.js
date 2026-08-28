@@ -14,7 +14,7 @@
 //              recurring flight numbers
 //
 // Returns a normalized shape regardless of which provider answered:
-//   { source: 'flightaware'|'aviationstack', status, scheduledArrival, estimatedArrival, actualArrival, gate, terminal }
+//   { source: 'flightaware'|'aviationstack'|'cache', status, scheduledArrival, estimatedArrival, actualArrival, gate, terminal, cachedAt }
 //
 // Status values:
 //   cancelled           - flight cancelled
@@ -27,6 +27,30 @@
 //                         late (15+ min) - arrival will very likely also slip
 //   scheduled           - still on the ground, on time so far
 //   unknown             - provider returned something outside the above
+//
+// Shared cache: with several people independently loading the page around
+// the same time, each one's own "check the next 10 flights" batch used to
+// be entirely independent - 5 people checking overlapping flights within a
+// minute could add up to 50 real API calls, blowing well past FlightAware's
+// 10-per-minute cap even though each individual session stayed under it.
+// Results are now cached in the same shared Netlify Blobs store the tracker
+// uses, keyed by flightNo+date. A request within CACHE_FRESH_MS of the last
+// real lookup for that exact flight is served straight from the cache - no
+// external API call at all - so concurrent users checking the same flights
+// (which, on one wedding's guest list, is most of them) collapse into a
+// single real lookup shared by everyone.
+
+const { getStore } = require('@netlify/blobs');
+
+const CACHE_FRESH_MS = 5 * 60 * 1000; // 5 minutes
+
+function getCacheStore() {
+  return getStore({
+    name: 'flight-status-cache',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_ACCESS_TOKEN,
+  });
+}
 
 const DELAY_THRESHOLD_MIN = 15;
 
@@ -163,27 +187,41 @@ exports.handler = async (event) => {
   if (!flightNo || !date) {
     return { statusCode: 400, body: JSON.stringify({ error: 'flightNo and date are required' }) };
   }
+  const cacheKey = `${flightNo}|${date}`;
+  const headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
+
+  let store;
+  try {
+    store = getCacheStore();
+    const cached = await store.get(cacheKey, { type: 'json' });
+    if (cached && cached.cachedAt && (Date.now() - cached.cachedAt) < CACHE_FRESH_MS) {
+      return { statusCode: 200, headers, body: JSON.stringify({ ...cached.data, source: cached.data.source, cachedAt: cached.cachedAt }) };
+    }
+  } catch (e) {
+    console.warn('Cache read failed, falling through to a live lookup:', e.message);
+  }
+
+  async function respondAndCache(result) {
+    const withCacheStamp = { ...result, cachedAt: Date.now() };
+    if (store) {
+      try { await store.setJSON(cacheKey, { data: result, cachedAt: withCacheStamp.cachedAt }); }
+      catch (e) { console.warn('Cache write failed (non-fatal):', e.message); }
+    }
+    return { statusCode: 200, headers, body: JSON.stringify(withCacheStamp) };
+  }
 
   try {
     const result = await queryFlightAware(flightNo, date);
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify(result),
-    };
+    return await respondAndCache(result);
   } catch (faErr) {
     // Reactive fallback - FlightAware failed for any reason, try AviationStack
     try {
       const result = await queryAviationStack(flightNo, date);
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify(result),
-      };
+      return await respondAndCache(result);
     } catch (asErr) {
       return {
         statusCode: 502,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers,
         body: JSON.stringify({
           error: 'Both providers failed',
           flightaware: faErr.message,
