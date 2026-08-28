@@ -64,6 +64,7 @@
   .statusSelect.err { background:#f8d7da; color:#842029; font-weight:600; }
   .blocked-badge { display:inline-block; background:#842029; color:white; font-weight:800; font-size:0.75rem; padding:5px 10px; border-radius:6px; letter-spacing:0.3px; cursor:help; }
   .sent-icon { font-size:1.1rem; cursor:pointer; padding:4px; }
+  .route-sub { font-size:0.72rem; color:#777; }
   .send-btn-mini { font-size:0.72rem; padding:4px 8px; border-radius:5px; border:1px solid var(--green); background:white; color:var(--green); cursor:pointer; font-weight:600; white-space:nowrap; }
   .waiting-badge { font-size:0.72rem; background:#f0f0f0; color:#888; padding:3px 8px; border-radius:6px; white-space:nowrap; }
   .loading { text-align:center; padding:40px; color:#888; }
@@ -545,26 +546,29 @@ function renderPassengerRow(rawName) {
     : '';
 
   return `<tr class="${rowClass}" data-search="${name.toLowerCase()}" data-status="${pStatus}">
-    ${prearrivalCell}
     <td class="name-cell" title="Click for details">${nameCell}${kidBadge}${seatBadge}</td>
     <td class="center">${contactCell}</td>
-    <td title="${tooltip}">${(() => {
-      if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
-      const fa = flightAwareLink(leg.flightNo, leg.date, leg.time);
-      if (fa.copyOnly) {
-        return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copy flight number to check status on FlightAware">${leg.flightNo}</a>`;
-      }
-      return `<a href="${fa.url}" target="_blank" class="flight-link" title="Check flight status history">${leg.flightNo}</a>`;
-    })()}</td>
-    ${arrivedCell}
-    <td title="${tooltip}">${leg ? `${originCode} → ${destCode}` : ''}</td>
     <td>${flightArrivalCell}${liveStatusBadge}</td>
+    ${arrivedCell}
+    <td title="${tooltip}">${(() => {
+      const flightPart = (() => {
+        if (!leg || !leg.flightNo) return noPickup ? 'Own arrangements' : 'TBC';
+        const fa = flightAwareLink(leg.flightNo, leg.date, leg.time);
+        if (fa.copyOnly) {
+          return `<a href="https://www.flightaware.com/live/" target="_blank" class="flight-link flight-link-copy" data-flightno="${fa.ident}" title="Copy flight number to check status on FlightAware">${leg.flightNo}</a>`;
+        }
+        return `<a href="${fa.url}" target="_blank" class="flight-link" title="Check flight status history">${leg.flightNo}</a>`;
+      })();
+      const routePart = leg ? `${originCode} → ${destCode}` : '';
+      return routePart ? `${flightPart}<br><span class="route-sub">${routePart}</span>` : flightPart;
+    })()}</td>
     <td>${confirmCheckinCell}</td>
+    ${prearrivalCell}
   </tr>`;
 }
 
 function tableHead() {
-  return `<thead><tr><th>Pre-Arrival Welcome</th><th>Passenger</th><th>Contact</th><th>Flight</th><th>Arrived?</th><th>Route</th><th>Flight Arrival</th><th>Confirm Hotel Check-In</th></tr></thead>`;
+  return `<thead><tr><th>Passenger</th><th>Contact</th><th>Flight Arrival</th><th>Arrived?</th><th>Flight / Route</th><th>Confirm Hotel Check-In</th><th>Pre-Arrival Welcome</th></tr></thead>`;
 }
 
 // Vans where every passenger is done get auto-collapsed to a one-line
