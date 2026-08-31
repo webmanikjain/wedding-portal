@@ -2,8 +2,12 @@ const { getStore } = require('@netlify/blobs');
 const seed = require('../../tracker_seed.json');
 
 function getTrackerStore() {
-  // See get-tracker.js — auto-config keeps this stable across env-var churn.
-  return getStore('wedding-tracker');
+  // Explicit config required — see comment in get-tracker.js.
+  return getStore({
+    name: 'wedding-tracker',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_ACCESS_TOKEN,
+  });
 }
 
 // Body shape (one of):
@@ -69,7 +73,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         ok: persisted,
         data: verifyRead || data,
-        __backendVersion: 'auto-config-v1',
+        __backendVersion: 'explicit-config-v2',
         __verifyReadShowedValue: wroteVal,
         __persistedCheck: persisted ? 'yes' : 'FAILED_VERIFY_READ_MISMATCH',
       }),
@@ -78,7 +82,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: err.message, stack: err.stack, __backendVersion: 'auto-config-v1' }),
+      body: JSON.stringify({ error: err.message, stack: err.stack, __backendVersion: 'explicit-config-v2' }),
     };
   }
 };

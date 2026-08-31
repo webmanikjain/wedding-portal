@@ -5,12 +5,16 @@ const NO_PICKUP_SET = new Set(pickupDropoff.noPickupNames);
 const NO_DROPOFF_SET = new Set(pickupDropoff.noDropoffNames);
 
 function getTrackerStore() {
-  // When running inside a Netlify Function, @netlify/blobs auto-detects the
-  // site context. Passing an explicit siteID/token here silently breaks writes
-  // if either env var is stale/expired (which is what happened once and cost
-  // hours of debugging). Keep this as bare `getStore(name)` so the runtime
-  // handles auth automatically.
-  return getStore('wedding-tracker');
+  // This site was configured before Netlify started auto-injecting Blob
+  // credentials in Functions, so we MUST pass siteID + token explicitly here.
+  // The bare `getStore('name')` form fails with MissingBlobsEnvironmentError.
+  // Both env vars are set in the Netlify site dashboard (Site settings →
+  // Environment variables).
+  return getStore({
+    name: 'wedding-tracker',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_ACCESS_TOKEN,
+  });
 }
 
 // One-time safe backfill: fills 'No Pickup'/'No Dropoff' ONLY where the
@@ -81,7 +85,7 @@ exports.handler = async () => {
     // Attach a version marker so the browser can prove which build served
     // this response — helps debug stale caches and confirms the new backend
     // is actually live. Bump the string whenever this file changes.
-    data.__backendVersion = 'auto-config-v1';
+    data.__backendVersion = 'explicit-config-v2';
     return {
       statusCode: 200,
       headers: {
@@ -95,7 +99,7 @@ exports.handler = async () => {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: err.message, stack: err.stack, __backendVersion: 'auto-config-v1' }),
+      body: JSON.stringify({ error: err.message, stack: err.stack, __backendVersion: 'explicit-config-v2' }),
     };
   }
 };
