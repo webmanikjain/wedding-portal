@@ -5,11 +5,12 @@ const NO_PICKUP_SET = new Set(pickupDropoff.noPickupNames);
 const NO_DROPOFF_SET = new Set(pickupDropoff.noDropoffNames);
 
 function getTrackerStore() {
-  return getStore({
-    name: 'wedding-tracker',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_ACCESS_TOKEN,
-  });
+  // When running inside a Netlify Function, @netlify/blobs auto-detects the
+  // site context. Passing an explicit siteID/token here silently breaks writes
+  // if either env var is stale/expired (which is what happened once and cost
+  // hours of debugging). Keep this as bare `getStore(name)` so the runtime
+  // handles auth automatically.
+  return getStore('wedding-tracker');
 }
 
 // One-time safe backfill: fills 'No Pickup'/'No Dropoff' ONLY where the
@@ -77,6 +78,10 @@ exports.handler = async () => {
       if (!data.vanPickupTime) { data.vanPickupTime = {}; c = true; }
       if (a || b || c) await store.setJSON('state-v2', data);
     }
+    // Attach a version marker so the browser can prove which build served
+    // this response — helps debug stale caches and confirms the new backend
+    // is actually live. Bump the string whenever this file changes.
+    data.__backendVersion = 'auto-config-v1';
     return {
       statusCode: 200,
       headers: {
@@ -87,6 +92,10 @@ exports.handler = async () => {
       body: JSON.stringify(data),
     };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: err.message, stack: err.stack, __backendVersion: 'auto-config-v1' }),
+    };
   }
 };

@@ -2,11 +2,8 @@ const { getStore } = require('@netlify/blobs');
 const seed = require('../../tracker_seed.json');
 
 function getTrackerStore() {
-  return getStore({
-    name: 'wedding-tracker',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_ACCESS_TOKEN,
-  });
+  // See get-tracker.js — auto-config keeps this stable across env-var churn.
+  return getStore('wedding-tracker');
 }
 
 // Body shape (one of):
@@ -48,15 +45,40 @@ exports.handler = async (event) => {
     }
 
     await store.setJSON('state-v2', data);
+    // Read back to confirm the write actually persisted (guards against silent
+    // blob-store failures that used to leave the frontend thinking a save
+    // worked). If the read comes back different, we return 500 so the client
+    // can retry instead of assuming success.
+    const verifyRead = await store.get('state-v2', { type: 'json' });
+    const wroteVal = (
+      body.type === 'transportPickedUp' ? (verifyRead && verifyRead.transportPickedUp && verifyRead.transportPickedUp[body.guestName]) :
+      body.type === 'roomCheckedOut' ? (verifyRead && verifyRead.roomCheckedOut && verifyRead.roomCheckedOut[String(body.listNum)]) :
+      body.type === 'roomCheckedIn' ? (verifyRead && verifyRead.roomCheckedIn && verifyRead.roomCheckedIn[String(body.listNum)]) :
+      body.type === 'transportReceived' ? (verifyRead && verifyRead.transportReceived && verifyRead.transportReceived[body.guestName]) :
+      body.type === 'vanPickupTime' ? (verifyRead && verifyRead.vanPickupTime && verifyRead.vanPickupTime[body.vanId]) :
+      body.type === 'message' ? (verifyRead && verifyRead.messages && verifyRead.messages[body.guestName] && verifyRead.messages[body.guestName][body.field]) :
+      undefined
+    );
+    const persisted = (wroteVal === body.value) || (body.value === false && !wroteVal);
     return {
-      statusCode: 200,
+      statusCode: persisted ? 200 : 500,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify({ ok: true, data }),
+      body: JSON.stringify({
+        ok: persisted,
+        data: verifyRead || data,
+        __backendVersion: 'auto-config-v1',
+        __verifyReadShowedValue: wroteVal,
+        __persistedCheck: persisted ? 'yes' : 'FAILED_VERIFY_READ_MISMATCH',
+      }),
     };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: err.message, stack: err.stack, __backendVersion: 'auto-config-v1' }),
+    };
   }
 };
