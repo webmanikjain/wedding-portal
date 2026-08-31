@@ -15,6 +15,7 @@ function getTrackerStore() {
 //   { type: 'roomCheckedIn', listNum, value }            value: true|false  (arrivals - hotel check-in confirmed)
 //   { type: 'transportPickedUp', guestName, value }      value: true|false  (departures - return transport picked up guest from hotel)
 //   { type: 'roomCheckedOut', listNum, value }           value: true|false  (departures - hotel checkout confirmed)
+//   { type: 'vanPickupTime', vanId, value }              value: 'HH:MM'     (departures - planner-edited per-van pickup time override)
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -24,9 +25,10 @@ exports.handler = async (event) => {
     const store = getTrackerStore();
     let data = await store.get('state-v2', { type: 'json' });
     if (!data) data = seed;
-    // Backward-compatible: older saved state predates these two fields
+    // Backward-compatible: older saved state predates these fields
     if (!data.transportPickedUp) data.transportPickedUp = {};
     if (!data.roomCheckedOut) data.roomCheckedOut = {};
+    if (!data.vanPickupTime) data.vanPickupTime = {};
 
     if (body.type === 'message') {
       if (!data.messages[body.guestName]) data.messages[body.guestName] = {};
@@ -39,6 +41,8 @@ exports.handler = async (event) => {
       data.transportPickedUp[body.guestName] = body.value;
     } else if (body.type === 'roomCheckedOut') {
       data.roomCheckedOut[String(body.listNum)] = body.value;
+    } else if (body.type === 'vanPickupTime') {
+      data.vanPickupTime[body.vanId] = body.value;
     } else {
       return { statusCode: 400, body: JSON.stringify({ error: 'Unknown type' }) };
     }

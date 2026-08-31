@@ -66,6 +66,7 @@ exports.handler = async () => {
       migrateAwayFromNoPickupPreArrival(data);
       if (!data.transportPickedUp) data.transportPickedUp = {};
       if (!data.roomCheckedOut) data.roomCheckedOut = {};
+      if (!data.vanPickupTime) data.vanPickupTime = {};
       await store.setJSON('state-v2', data);
     } else {
       const a = backfillPickupDropoff(data);
@@ -73,6 +74,7 @@ exports.handler = async () => {
       let c = false;
       if (!data.transportPickedUp) { data.transportPickedUp = {}; c = true; }
       if (!data.roomCheckedOut) { data.roomCheckedOut = {}; c = true; }
+      if (!data.vanPickupTime) { data.vanPickupTime = {}; c = true; }
       if (a || b || c) await store.setJSON('state-v2', data);
     }
     return {
