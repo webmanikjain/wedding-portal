@@ -67,10 +67,11 @@
   .send-btn-mini { font-size:0.72rem; padding:4px 8px; border-radius:5px; border:1px solid var(--green); background:white; color:var(--green); cursor:pointer; font-weight:600; white-space:nowrap; }
   .waiting-badge { font-size:0.72rem; background:#f0f0f0; color:#888; padding:3px 8px; border-radius:6px; white-space:nowrap; }
   .loading { text-align:center; padding:40px; color:#888; }
-  .pickedup-cell { text-align:center; padding:6px 8px; }
-  .pickedup-cell .pickedup-check-wrap { margin-bottom:4px; }
-  .pickedup-cell .flight-merged { font-size:0.85rem; margin-top:2px; }
-  .pickedup-cell .route-sub { font-size:0.72rem; color:#888; margin-top:2px; }
+  .pickedup-cell { text-align:left; padding:6px 8px; white-space:nowrap; }
+  .pickedup-cell > * { display:inline-block; vertical-align:middle; margin-right:6px; }
+  .pickedup-cell .pickedup-check-wrap { margin-right:8px; }
+  .pickedup-cell .flight-merged { font-size:0.85rem; }
+  .pickedup-cell .route-sub { font-size:0.75rem; color:#888; }
   .van-pickup-time { font-family:inherit; font-size:inherit; padding:2px 6px; border:1px solid rgba(255,255,255,0.5); border-radius:4px; background:rgba(255,255,255,0.15); color:inherit; margin:0 2px; }
   .van-pickup-time:focus { background:#fff; color:#111; outline:2px solid var(--gold); }
 </style></head>
@@ -490,10 +491,10 @@ function renderPassengerRow(rawName) {
     }
     return `<a href="${fa.url}" target="_blank" class="flight-link" title="Check flight status history">${leg.flightNo}</a>`;
   })();
-  const routeSub = leg ? `<div class="route-sub">${originCode} → ${destCode}</div>` : '';
+  const routeSub = leg ? `<span class="route-sub">${originCode} → ${destCode}</span>` : '';
   const pickedUpCell = noDropoff
-    ? `<td class="pickedup-cell"><div class="muted">N/A</div>${flightLinkForCell}${routeSub}</td>`
-    : `<td class="pickedup-cell"><div class="pickedup-check-wrap"><input type="checkbox" class="pickedup-check" data-guest="${name.replace(/"/g,'&quot;')}" ${transportPickedUpStatus(name) ? 'checked' : ''}></div><div class="flight-merged">${flightLinkForCell}</div>${routeSub}</td>`;
+    ? `<td class="pickedup-cell"><span class="muted">N/A</span><span class="flight-merged">${flightLinkForCell}</span>${routeSub}</td>`
+    : `<td class="pickedup-cell"><span class="pickedup-check-wrap"><input type="checkbox" class="pickedup-check" data-guest="${name.replace(/"/g,'&quot;')}" ${transportPickedUpStatus(name) ? 'checked' : ''}></span><span class="flight-merged">${flightLinkForCell}</span>${routeSub}</td>`;
 
   const gateTimeStr = leg && leg.date && leg.time ? leg.time : '12:00';
   const hoursOutPD = leg ? hoursUntil(leg.date, gateTimeStr) : (room.checkOut ? hoursUntil(room.checkOut, '12:00') : null);
