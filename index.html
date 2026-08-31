@@ -806,11 +806,10 @@ function renderCardInner(listNum, focusName) {
   // actionable (gated by timing) rather than treating it as "next."
   let nextAction = null;
   const dStatus = preDepartureReminderStatus(repName);
-  // Pre-Arrival Welcome removed per user request; Hotel/Flight Confirmation are
-  // hidden. Card starts at Guest Check-in and moves through Pre-Departure ->
-  // Transport Picked Up -> Checkout.
-  if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin', expandHotel: true };
-  else if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };
+  // Pre-Arrival Welcome + Guest Check-In steps removed per user request.
+  // Chain now starts at Pre-Departure Reminder and moves through Transport
+  // Picked Up -> Checkout.
+  if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };
   else if (!noDropoff && !depTooEarly && dStatus !== 'sent') nextAction = { text: 'Send Pre-Departure Reminder', icon: '📤', color: '#8a6d1f', target: 'action-predeparture' };
   else if (!noDropoff && depTooEarly && dStatus !== 'sent') nextAction = { text: `Send Pre Departure Reminder in ${formatTimeRemaining(hoursOut - 28)}`, icon: '⏳', color: '#888', target: null };
   else if (!transportPickedUp && depLeg && !noDropoff) nextAction = { text: 'Mark Transport Picked Up on departure', icon: '🚐', color: '#8a6d1f', target: 'action-transport-pickedup' };
