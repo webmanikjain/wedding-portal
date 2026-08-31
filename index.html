@@ -699,47 +699,10 @@ function renderCardInner(listNum, focusName) {
   // §1 spec: Flight Arrival Status + Transport Pickup boxes removed entirely.
   // arrLeg is still consumed below by the Pre-Arrival Welcome gate calc.
 
-  // Send Pre-Arrival Welcome Message (Message #5a/5b) — deliberately OUTSIDE
-  // the arrLeg guard above. Unlike Flight Confirmation, this message doesn't
-  // reference flight details at all (the 5b safe-travels variant is just
-  // "see you at check-in on [date]") — a guest who declined to share flight
-  // info should still be able to receive it, so this must not disappear
-  // just because arrLeg is missing.
-  const authPWMsg = DATA.wa_prearrival_welcome_msg ? DATA.wa_prearrival_welcome_msg[baseName(repName)] : null;
-  const authPWPhone = DATA.wa_prearrival_welcome_phone ? DATA.wa_prearrival_welcome_phone[baseName(repName)] : null;
-  const prearrivalWelcomeMsg = authPWMsg || MSGS.preArrivalWelcome(repName, room, arrLeg);
-  const prearrivalWelcomeWa = waLink(authPWPhone || primaryPhone, prearrivalWelcomeMsg);
-  // Gate: stays disabled until 60 hours before the guest's arrival (falls
-  // back to room check-in date, assuming a 12:00 default time, if there's no
-  // flight on file - e.g. self-arranged guests). Doesn't override an
-  // already-Sent or Error status - those still display normally regardless
-  // of timing.
-  const gateDateStr = arrLeg && arrLeg.date ? arrLeg.date : room.checkIn;
-  const gateTimeStr = arrLeg && arrLeg.date && arrLeg.time ? arrLeg.time : '12:00';
-  const hoursOutPW = hoursUntil(gateDateStr, gateTimeStr);
-  const tooEarly = hoursOutPW !== null && hoursOutPW > 72;
+  // Pre-Arrival Welcome section removed per user request. isDomesticArrival is
+  // still computed because the domestic-arrival badge above the card uses it.
   const isDomesticArrival = arrLeg && arrLeg.origin && arrLeg.origin.includes('Phuket');
-  const preArrivalWelcomeRow = `<div class="send-row" id="action-prearrival">
-      ${(() => {
-        const status = preArrivalWelcomeStatus(repName);
-        const domesticSuffix = isDomesticArrival ? ' (Domestic)' : '';
-        if (status === 'error') return `<button class="btn" disabled style="opacity:.5;">Blocked — check status</button>`;
-        if (status === 'sent') return prearrivalWelcomeWa ? `<button class="btn send-btn" data-wa="${prearrivalWelcomeWa}" data-track-guest="${baseName(repName)}" data-track-field="preArrivalWelcomeSent" style="background:#8d8a7f;opacity:.75;">Re-send Pre-Arrival Welcome${domesticSuffix}</button>` : `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
-        if (tooEarly) return `<button class="btn" disabled style="opacity:.5;">Pre-Arrival Message: Wait closer to arrival</button>`;
-        return prearrivalWelcomeWa ? `<button class="btn send-btn" data-wa="${prearrivalWelcomeWa}" data-track-guest="${baseName(repName)}" data-track-field="preArrivalWelcomeSent">Send Pre-Arrival Welcome Message${domesticSuffix}</button>` : `<button class="btn" disabled style="opacity:.5;">No phone on file</button>`;
-      })()}
-      ${(() => {
-        const status = preArrivalWelcomeStatus(repName);
-        // Note: 'No Pickup' is informational only here, not disabling — the
-        // 5b safe-travels message variant is specifically written for
-        // no-pickup guests, so they still need this message, just different content.
-        if (status === 'no_pickup') return '<span class="check" style="color:var(--muted);">No Pickup (safe-travels version)</span>';
-        if (status === 'sent') return '<span class="check" style="color:var(--green);font-weight:600;">✓ Sent</span>';
-        if (status === 'error') return '<span class="check" style="color:#a33;font-weight:600;">⚠ Check status</span>';
-        if (tooEarly) return `<span class="check" style="color:var(--muted);">Opens in ${formatTimeRemaining(hoursOutPW - 72)}</span>`;
-        return '<span class="check" style="color:var(--muted);">Not marked sent yet</span>';
-      })()}
-    </div>`;
+  const preArrivalWelcomeRow = '';
 
   // §1: standalone check-in card removed — check-in checkbox now lives INSIDE
   // the Hotel Info collapsible (see hotelHTML above). This alias keeps the
@@ -842,17 +805,11 @@ function renderCardInner(listNum, focusName) {
   // day -> checked-in -> Pre-Departure), skipping anything not yet
   // actionable (gated by timing) rather than treating it as "next."
   let nextAction = null;
-  const hStatus = hotelConfirmationStatus(primaryName);
-  const fStatus = flightConfirmationStatus(repName);
-  const pStatus = preArrivalWelcomeStatus(repName);
   const dStatus = preDepartureReminderStatus(repName);
-  // Hotel Confirmation and Flight Confirmation buttons are hidden for now
-  // (already sent to everyone, not being re-tracked) - skip straight to
-  // Pre-Arrival Welcome as the first real actionable item.
-  if (pStatus === 'error') nextAction = { text: 'Pre-Arrival Welcome is blocked — check status', icon: '⚠', color: '#a33', target: 'action-prearrival' };
-  else if (!tooEarly && pStatus !== 'sent') nextAction = { text: 'Send Pre-Arrival Welcome Message', icon: '📤', color: '#8a6d1f', target: 'action-prearrival' };
-  else if (tooEarly && pStatus !== 'sent') nextAction = { text: `Send Pre Arrival Welcome in ${formatTimeRemaining(hoursOutPW - 72)}`, icon: '⏳', color: '#888', target: null };
-  else if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin', expandHotel: true };
+  // Pre-Arrival Welcome removed per user request; Hotel/Flight Confirmation are
+  // hidden. Card starts at Guest Check-in and moves through Pre-Departure ->
+  // Transport Picked Up -> Checkout.
+  if (!roomCheckedIn) nextAction = { text: 'Mark Guest Checked In once at hotel', icon: '🏨', color: '#8a6d1f', target: 'action-checkedin', expandHotel: true };
   else if (dStatus === 'error') nextAction = { text: 'Pre-Departure Reminder is blocked — check status', icon: '⚠', color: '#a33', target: 'action-predeparture' };
   else if (!noDropoff && !depTooEarly && dStatus !== 'sent') nextAction = { text: 'Send Pre-Departure Reminder', icon: '📤', color: '#8a6d1f', target: 'action-predeparture' };
   else if (!noDropoff && depTooEarly && dStatus !== 'sent') nextAction = { text: `Send Pre Departure Reminder in ${formatTimeRemaining(hoursOut - 28)}`, icon: '⏳', color: '#888', target: null };
